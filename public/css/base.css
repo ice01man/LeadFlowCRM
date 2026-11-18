@@ -165,6 +165,11 @@ body.con-lateral { padding-left: var(--ancho-lateral); }
 /* ---------- Paneles ---------- */
 .seccion { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio-panel); padding: 20px 22px; margin-top: 16px; }
 .seccion > .sub { margin-bottom: 14px; }
+/* Plataforma: alta y edición de plantillas de rubro */
+.tarjeta-form { border: 1px solid var(--borde); border-radius: var(--radio-panel); padding: 16px 18px; margin: 4px 0 12px; background: var(--fondo); }
+.tarjeta-form h3 { margin: 0 0 4px; }
+#editor-plantilla:not(:empty) { margin-top: 28px; padding-top: 8px; border-top: 3px solid var(--acento); }
+.encabezado-editor h2 { margin: 0; }
 .grilla { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 760px) { .grilla.dos { grid-template-columns: 1fr 1fr; } }
 details { border-top: 1px solid var(--borde); padding: 12px 0; }

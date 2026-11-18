@@ -1,6 +1,7 @@
 // Pantalla del superadmin: organizaciones (clientes del SaaS) y plantillas de vertical.
 import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
 import { api } from './api.js';
+import { editorConfig, seccion } from './editorConfig.js';
 
 const s = await sesion();
 if (!s.esSuperadmin) await irA('/inicio');
@@ -12,6 +13,8 @@ const fecha = (d) => new Date(d).toLocaleDateString('es-AR');
 
 const listaOrgs = el('div', { class: 'tabla-scroll' });
 const listaVerticales = el('div');
+const altaPlantilla = el('div');
+const zonaEditor = el('div', { id: 'editor-plantilla' });
 const selectVertical = el('select', { id: 'org-vertical', name: 'verticalCodigo', required: true });
 
 poner(app, 
@@ -20,7 +23,9 @@ poner(app,
   seccionAlta(),
   el('section', { class: 'seccion' }, el('h2', {}, 'Organizaciones'), el('p', { class: 'sub' }, 'Suspender una organización corta el acceso de todos sus usuarios al instante.'), listaOrgs),
   el('section', { class: 'seccion', id: 'verticales' }, el('h2', {}, 'Plantillas de vertical'),
-    el('p', { class: 'sub' }, 'Cada organización recibe una copia al darse de alta. Cambiar una plantilla no modifica a las organizaciones que ya la usan.'), listaVerticales),
+    el('p', { class: 'sub' }, 'Cada organización recibe una copia al darse de alta. Cambiar una plantilla no modifica a las organizaciones que ya la usan.'),
+    altaPlantilla, listaVerticales),
+  zonaEditor,
 );
 
 let verticales = [];
@@ -98,6 +103,66 @@ async function cargarVerticales() {
     ...verticales.filter((v) => v.activo).map((v) => el('option', { value: v.codigo }, v.nombre)));
   const detalles = await Promise.all(verticales.map((v) => api('GET', `/verticales/${v.codigo}`)));
   poner(vaciar(listaVerticales), ...detalles.map(tarjetaVertical));
+  dibujarAltaPlantilla();
+}
+
+// ---------- Nueva plantilla de rubro ----------
+function dibujarAltaPlantilla(abierto = false) {
+  const boton = el('button', { type: 'button', class: 'secundario', onclick: () => dibujarAltaPlantilla(true) }, 'Nueva plantilla de rubro');
+  if (!abierto) { poner(vaciar(altaPlantilla), el('div', { class: 'acciones' }, boton)); return; }
+  const base = el('select', { id: 'pl-base', name: 'basadoEn', required: true },
+    verticales.map((v) => el('option', { value: v.codigo }, v.nombre)));
+  const form = el('form', { class: 'tarjeta-form', novalidate: true },
+    el('h3', {}, 'Nueva plantilla de rubro'),
+    el('p', { class: 'sub' }, 'Se crea como copia de una plantilla existente. Después ajustás etapas, pesos y categorías.'),
+    el('div', { class: 'campos' },
+      campo('Nombre del rubro', el('input', { id: 'pl-nombre', name: 'nombre', required: true, maxlength: 80, placeholder: 'Ferretería' })),
+      campo('Copiar desde', base),
+      campo('Descripción (opcional)', el('input', { id: 'pl-desc', name: 'descripcion', maxlength: 300 })),
+    ),
+    el('div', { class: 'acciones' },
+      el('button', { type: 'submit' }, 'Crear plantilla'),
+      el('button', { type: 'button', class: 'secundario', onclick: () => dibujarAltaPlantilla(false) }, 'Cancelar')));
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = form.elements;
+    if (!f.nombre.value.trim()) { aviso('Poné el nombre del rubro.', 'error'); f.nombre.focus(); return; }
+    conBoton(form.querySelector('button[type=submit]'), async () => {
+      const v = await api('POST', '/verticales', { nombre: f.nombre.value, descripcion: f.descripcion.value, basadoEn: f.basadoEn.value });
+      aviso(`Plantilla "${v.nombre}" creada. Ya aparece en el alta de organizaciones.`);
+      await cargarVerticales();
+      await abrirEditor(v.codigo);
+    });
+  });
+  poner(vaciar(altaPlantilla), form);
+  form.elements.nombre.focus();
+}
+
+const cuenta = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+
+// ---------- Editor de una plantilla ----------
+async function abrirEditor(codigo) {
+  const v = await api('GET', `/verticales/${codigo}`);
+  const guardar = async (boton, cambios, mensaje) => conBoton(boton, async () => {
+    await api('PATCH', `/verticales/${codigo}`, cambios);
+    aviso(mensaje);
+    await cargarVerticales();
+    await abrirEditor(codigo);
+  });
+  const nombre = el('input', { id: 'ed-nombre', value: v.nombre, maxlength: 80 });
+  const descripcion = el('input', { id: 'ed-desc', value: v.descripcion || '', maxlength: 300 });
+  const cerrar = el('button', { type: 'button', class: 'secundario', onclick: () => { vaciar(zonaEditor); document.getElementById('verticales').scrollIntoView(); } }, 'Cerrar editor');
+  poner(vaciar(zonaEditor),
+    el('div', { class: 'encabezado-editor' },
+      el('h2', {}, `Plantilla: ${v.nombre}`),
+      el('p', { class: 'sub' }, 'Los cambios valen para las organizaciones que se creen de ahora en más. Las que ya existen conservan su copia.')),
+    seccion('Datos de la plantilla', 'El nombre es el que aparece en el desplegable de Rubro al crear una organización.',
+      el('div', { class: 'campos' }, campo('Nombre', nombre), campo('Descripción', descripcion)),
+      el('div', { class: 'acciones' }, el('button', { type: 'button', onclick: (ev) => guardar(ev.currentTarget, { nombre: nombre.value, descripcion: descripcion.value }, 'Datos guardados.') }, 'Guardar datos'))),
+    ...editorConfig(v, { editable: true, guardar, prefijo: 'pl' }),
+    el('p', { class: 'suave' }, `Guiones de visita, plantillas de email y KPIs vienen de la plantilla de origen: ${cuenta(v.scriptsVisita.length, 'guion', 'guiones')}, ${cuenta(v.templatesEmail.length, 'email', 'emails')} y ${cuenta(v.kpiConfig.length, 'KPI', 'KPIs')}.`),
+    el('div', { class: 'acciones' }, cerrar));
+  zonaEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function tarjetaVertical(v) {
@@ -120,5 +185,5 @@ function tarjetaVertical(v) {
       el('div', {}, el('strong', {}, 'Categorías de producto'), el('div', { class: 'chips' }, v.categoriasProducto.map((c) => el('span', { class: 'chip' }, c)))),
     ),
     el('p', { class: 'suave' }, `${v.kpiConfig.length} KPIs · ${v.scriptsVisita.length} guiones de visita · ${v.templatesEmail.length} plantillas de email`),
-    el('div', { class: 'acciones' }, boton));
+    el('div', { class: 'acciones' }, el('button', { type: 'button', class: 'chico', onclick: () => abrirEditor(v.codigo) }, 'Editar plantilla'), boton));
 }

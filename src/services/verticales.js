@@ -31,14 +31,35 @@ export async function obtener(codigo) {
   return v;
 }
 
+const aCodigo = (t) => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 26);
+
+/** Código libre a partir del nombre: "Ferretería" → ferreteria, ferreteria_2... */
+async function codigoLibre(nombre) {
+  let base = aCodigo(nombre);
+  if (base.length < 2) base = `rubro_${base}`.replace(/_$/, '');
+  let codigo = base;
+  for (let i = 2; await db.plataforma.verticales.findOne({ codigo }); i += 1) codigo = `${base}_${i}`;
+  return codigo;
+}
+
 export async function crear(datos = {}) {
-  if (typeof datos.codigo !== 'string' || !CODIGO.test(datos.codigo)) throw badRequest('Código inválido (minúsculas, números y guion bajo, 2 a 30 caracteres).');
-  if (await db.plataforma.verticales.findOne({ codigo: datos.codigo })) throw conflicto('Ya existe un vertical con ese código.');
+  const nombre = texto(datos.nombre, 'El nombre', { max: 80 });
+  if (await db.plataforma.verticales.findOne({ nombre: { $regex: `^${nombre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' } })) {
+    throw conflicto(`Ya existe una plantilla llamada "${nombre}".`);
+  }
+  let codigo;
+  if (datos.codigo === undefined || datos.codigo === '') codigo = await codigoLibre(nombre);
+  else {
+    if (typeof datos.codigo !== 'string' || !CODIGO.test(datos.codigo)) throw badRequest('Código inválido (minúsculas, números y guion bajo, 2 a 30 caracteres).');
+    if (await db.plataforma.verticales.findOne({ codigo: datos.codigo })) throw conflicto('Ya existe un vertical con ese código.');
+    codigo = datos.codigo;
+  }
   const base = datos.basadoEn ? extraerConfig(await obtener(datos.basadoEn)) : {};
   const config = validarConfig({ ...base, ...extraerConfig(datos) });
   return db.plataforma.verticales.create({
-    codigo: datos.codigo,
-    nombre: texto(datos.nombre, 'El nombre', { max: 80 }),
+    codigo,
+    nombre,
     descripcion: texto(datos.descripcion, 'La descripción', { max: 300, requerido: false }),
     activo: true,
     ...config,
