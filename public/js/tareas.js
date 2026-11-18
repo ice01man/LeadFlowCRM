@@ -1,9 +1,9 @@
 // Tareas: agrupadas por vencimiento, con prioridad, dependencias y alta rápida.
-import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, fecha, PRIORIDAD } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, filaTarea, PRIORIDAD } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.organizacion) location.replace('/clientes');
+if (!s.organizacion) await irA('/clientes');
 barra(s, '/tareas');
 
 const gestiona = ['admin', 'consultor'].includes(s.usuario.rol);
@@ -35,15 +35,23 @@ form.addEventListener('submit', (ev) => {
   conBoton(crear, async () => {
     await api('POST', '/crm/tareas', { titulo: titulo.value, fechaVencimiento: vence.value || null, prioridad: prioridad.value, owner: responsable?.value, dependeDe: [...depende.selectedOptions].map((o) => o.value) });
     form.reset(); prioridad.value = 'media'; if (responsable) responsable.value = s.usuario._id;
+    seccionNueva.classList.add('oculto'); botonNueva.setAttribute('aria-expanded', 'false');
     aviso('Tarea creada.');
     await cargar();
   });
 });
 
-poner(app, 
+const seccionNueva = el('section', { class: 'seccion oculto', id: 'nueva-tarea' }, el('h2', {}, 'Nueva tarea'), form);
+const botonNueva = el('button', { type: 'button', 'aria-controls': 'nueva-tarea', 'aria-expanded': 'false' }, 'Nueva tarea');
+botonNueva.addEventListener('click', () => {
+  const abierta = !seccionNueva.classList.toggle('oculto');
+  botonNueva.setAttribute('aria-expanded', String(abierta));
+  if (abierta) titulo.focus();
+});
+poner(app,
   el('div', { class: 'encabezado' }, el('div', {}, el('h1', {}, 'Tareas'), el('p', { class: 'sub' }, 'Lo pendiente, ordenado por vencimiento.')),
-    gestiona ? el('div', { class: 'acciones' }, fOwner) : null),
-  escribe ? el('section', { class: 'seccion' }, el('h2', {}, 'Nueva tarea'), form) : null,
+    el('div', { class: 'acciones' }, gestiona ? fOwner : null, escribe ? botonNueva : null)),
+  escribe ? seccionNueva : null,
   el('section', { class: 'seccion' }, contenido),
 );
 
@@ -60,22 +68,17 @@ async function cambiarEstado(t, estado, check) {
 }
 
 function item(t, hecha = false) {
-  const check = el('input', { type: 'checkbox', 'aria-label': `Completar ${t.titulo}`, checked: hecha, disabled: !escribe || (!hecha && t.bloqueadaPor?.length > 0) });
-  check.addEventListener('change', () => cambiarEstado(t, check.checked ? 'completada' : 'pendiente', check));
-  return el('li', { class: hecha ? 'hecha' : '' }, check,
-    el('div', { class: 'info' },
-      el('strong', {}, t.titulo),
-      el('div', { class: 'suave chico-texto' },
-        [t.fechaVencimiento ? `Vence ${fecha(t.fechaVencimiento)}` : 'Sin fecha', filtroOwner !== 'yo' ? nombre.get(String(t.owner)) : null].filter(Boolean).join(' · '),
-        t.contactoId ? [' · ', el('a', { href: `/contacto?id=${t.contactoId}` }, t.contactoNombre || 'ver contacto')] : null),
-      t.bloqueadaPor?.length ? el('div', { class: 'bloqueo' }, `Espera a: ${t.bloqueadaPor.map((b) => b.titulo).join(', ')}`) : null),
-    hecha ? null : el('span', { class: `etiqueta ${t.prioridad}` }, PRIORIDAD[t.prioridad]));
+  return filaTarea(t, {
+    hecha,
+    responsable: filtroOwner !== 'yo' ? nombre.get(String(t.owner)) || 'Consultor' : null,
+    alCambiar: escribe ? (tarea, check) => cambiarEstado(tarea, check.checked ? 'completada' : 'pendiente', check) : null,
+  });
 }
 
 function grupo(clase, titulo, lista, vacio, hechas = false) {
   if (!lista.length && !vacio) return null;
   return el('div', {},
-    el('div', { class: `grupo-titulo ${clase}` }, el('h3', {}, titulo), el('span', { class: 'suave' }, String(lista.length))),
+    el('div', { class: `grupo-titulo ${clase}` }, el('h3', {}, titulo), el('span', { class: 'contador' }, String(lista.length))),
     lista.length ? el('ul', { class: 'lista-tareas' }, lista.map((t) => item(t, hechas))) : el('p', { class: 'vacio' }, vacio));
 }
 
@@ -85,7 +88,7 @@ async function cargar() {
   poner(vaciar(depende), ...abiertas.map((t) => el('option', { value: t._id }, t.titulo)));
   poner(vaciar(contenido), 
     grupo('vencidas', 'Vencidas', r.vencidas),
-    grupo('', 'Hoy', r.hoy, 'Nada para hoy.'),
+    grupo('hoy', 'Hoy', r.hoy, 'Nada para hoy.'),
     grupo('', 'Próximas', r.proximas),
     grupo('', 'Sin fecha', r.sinFecha),
     grupo('', 'Completadas en los últimos 7 días', r.completadas, null, true),

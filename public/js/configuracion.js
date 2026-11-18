@@ -1,9 +1,9 @@
 // Configuración comercial de la organización. Admin y consultor la editan; vendedor y lectura la consultan.
-import { el, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.organizacion) location.replace('/clientes');
+if (!s.organizacion) await irA('/clientes');
 barra(s, '/configuracion');
 
 const puedeEditar = ['admin', 'consultor'].includes(s.usuario.rol);

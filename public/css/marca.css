@@ -1,8 +1,32 @@
-/* Marca Revoluxia. Mismos valores que src/config/marca.js. Cambiar acá para cambiar todo el sistema. */
+/* Marca Revoluxia · LeadFlow CRM. Mismos valores que src/config/marca.js.
+   Cambiar acá para cambiar todo el sistema. */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/fuentes/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Sans";
+  src: url("/fuentes/instrument-sans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
 :root {
-  --marca-primario: #1f4e6e;
+  /* Color de marca, tomado del logo */
+  --marca-primario: #1f4e6e;        /* petróleo */
   --marca-primario-oscuro: #163a53;
   --marca-primario-claro: #6fa3c7;
-  --marca-texto: #0b0f14;
-  --marca-fuente: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --marca-noche: #10293a;           /* menú lateral */
+  --marca-texto: #14232d;
+
+  /* Señales: se usan solo cuando significan algo */
+  --senal-hoy: #d98e04;             /* ámbar: atención, hoy */
+  --senal-ganado: #1e8a5b;          /* verde: ganado, cobrado, al día */
+  --senal-vencido: #c23a2b;         /* rojo: vencido, perdido */
+
+  --fuente-titulos: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --fuente-texto: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --marca-fuente: var(--fuente-texto);
 }

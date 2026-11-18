@@ -1,9 +1,9 @@
 // Asistente de importación de contactos desde CSV: 1) archivo  2) columnas  3) resultado.
-import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!['admin', 'consultor'].includes(s.usuario.rol)) location.replace('/contactos');
+if (!['admin', 'consultor'].includes(s.usuario.rol)) await irA('/contactos');
 barra(s, '/contactos');
 
 const app = vaciar(document.getElementById('app'));

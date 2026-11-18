@@ -5,11 +5,15 @@ import { authRequired, requireRol, requireOrganizacion } from '../middleware/aut
 import { contexto } from '../middleware/contexto.js';
 import { ROLES_LECTURA, ROLES_CRM, ROLES_IA } from '../config/roles.js';
 import * as c from '../controllers/crmController.js';
+import * as inicio from '../services/inicio.js';
 
 export const crm = Router();
 crm.use(authRequired, requireOrganizacion, requireRol(...ROLES_LECTURA), contexto);
 const escribe = requireRol(...ROLES_CRM);
 const gestiona = requireRol(...ROLES_IA); // admin y consultor
+
+// Inicio: todo el resumen en un pedido
+crm.get('/inicio', async (req, res) => res.json(await inicio.resumen(req.ctx)));
 
 // Contactos (las rutas fijas van antes de /:id)
 crm.get('/contactos', c.listarContactos);

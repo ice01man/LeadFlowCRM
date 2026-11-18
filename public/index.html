@@ -5,28 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ingresar · LeadFlow CRM · Revoluxia</title>
   <meta name="description" content="LeadFlow CRM, gestión comercial con inteligencia de tendencias. Un producto de Revoluxia, soluciones tecnológicas.">
-  <meta name="theme-color" content="#1f4e6e">
+  <meta name="theme-color" content="#10293a">
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
   <link rel="apple-touch-icon" href="/img/icono-180.png">
   <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preload" href="/fuentes/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fuentes/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/base.css">
   <script type="module" src="/js/login.js"></script>
 </head>
 <body>
-  <main class="centrado">
-    <img class="logo logo-completo solo-claro" src="/img/revoluxia-logo.png" alt="Revoluxia, soluciones tecnológicas">
-    <img class="logo logo-completo solo-oscuro" src="/img/revoluxia-logo-claro.png" alt="Revoluxia, soluciones tecnológicas">
-    <form class="tarjeta" id="form-login" novalidate>
-      <h1>LeadFlow CRM</h1>
-      <p class="sub">Ingresá con tu cuenta.</p>
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" autocomplete="username" required>
-      <label for="password">Contraseña</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required>
-      <button type="submit">Ingresar</button>
-      <p class="error" id="error" role="alert"></p>
-    </form>
-    <p class="pie">LeadFlow CRM es un producto de <a href="https://www.facebook.com/profile.php?id=100095303406062" rel="noopener" target="_blank">Revoluxia</a> · soluciones tecnológicas</p>
+  <main class="acceso">
+    <section class="lado-marca" aria-hidden="true">
+      <img src="/img/revoluxia-logo-claro.png" alt="">
+      <div>
+        <h2>Cada cliente, en su etapa.</h2>
+        <p>Contactos, visitas, oportunidades y tareas del equipo comercial en un solo lugar, con el seguimiento de tu consultor.</p>
+      </div>
+      <p class="chico-texto">LeadFlow CRM es un producto de Revoluxia, soluciones tecnológicas.</p>
+      <div class="trazos"></div>
+    </section>
+    <section class="lado-form">
+      <form id="form-login" novalidate>
+        <img class="logo-movil solo-claro" src="/img/revoluxia-logo.png" alt="Revoluxia, soluciones tecnológicas">
+        <img class="logo-movil solo-oscuro" src="/img/revoluxia-logo-claro.png" alt="Revoluxia, soluciones tecnológicas">
+        <h1>Ingresá a LeadFlow</h1>
+        <p class="sub">Con el email y la contraseña que te dio tu administrador.</p>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required>
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button type="submit">Ingresar</button>
+        <p class="error" id="error" role="alert"></p>
+        <p class="pie">¿Problemas para entrar? Escribile a <a href="https://www.facebook.com/profile.php?id=100095303406062" rel="noopener" target="_blank">Revoluxia</a>.</p>
+      </form>
+    </section>
   </main>
 </body>
 </html>

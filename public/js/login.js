@@ -12,8 +12,8 @@ form.addEventListener('submit', async (ev) => {
   const boton = form.querySelector('button');
   boton.disabled = true;
   try {
-    await api('POST', '/auth/login', { email: form.email.value, password: form.password.value });
-    location.replace('/inicio');
+    const { usuario } = await api('POST', '/auth/login', { email: form.email.value, password: form.password.value });
+    location.replace(usuario.rol === 'superadmin' ? '/clientes' : '/inicio');
   } catch (e) {
     error.textContent = e.message;
   } finally {

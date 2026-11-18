@@ -1,9 +1,9 @@
 // Pantalla del superadmin: organizaciones (clientes del SaaS) y plantillas de vertical.
-import { el, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.esSuperadmin) location.replace('/inicio');
+if (!s.esSuperadmin) await irA('/inicio');
 barra(s, '/plataforma');
 
 const app = vaciar(document.getElementById('app'));

@@ -1,9 +1,9 @@
 // "Mis clientes": panel del consultor con el estado de cada organización (plan, CRM y uso).
-import { el, poner, vaciar, sesion, barra, aviso, moneda, fecha } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, moneda, fecha } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.esSuperadmin) location.replace('/inicio');
+if (!s.esSuperadmin) await irA('/inicio');
 barra(s, '/clientes');
 
 const app = vaciar(document.getElementById('app'));

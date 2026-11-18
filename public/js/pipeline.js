@@ -1,16 +1,18 @@
 // Tablero del pipeline: columnas por etapa, arrastrar y soltar para mover, ganar o perder desde la tarjeta.
 // En el celular (donde arrastrar es incómodo) cada tarjeta tiene un selector "Mover a…".
-import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, moneda, fecha, buscadorContacto } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, moneda, fecha, buscadorContacto, iniciales, tonoEtapa } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.organizacion) location.replace('/clientes');
+if (!s.organizacion) await irA('/clientes');
 barra(s, '/pipeline');
 
 const gestiona = ['admin', 'consultor'].includes(s.usuario.rol);
 const escribe = gestiona || s.usuario.rol === 'vendedor';
 const app = vaciar(document.getElementById('app'));
 const opciones = await api('GET', '/crm/contactos/opciones');
+const nombreVendedor = new Map(opciones.vendedores.map((v) => [v._id, v.nombre.replace(' (consultor)', '')]));
+const flujo = el('div', { class: 'flujo', role: 'img' });
 
 let filtroOwner = '';
 let etapas = [];
@@ -52,7 +54,7 @@ poner(app,
     el('div', {}, el('h1', {}, 'Pipeline'), totales),
     el('div', { class: 'acciones' }, gestiona ? fOwner : null,
       escribe ? el('button', { type: 'button', onclick: () => { formNueva.classList.remove('oculto'); document.getElementById('op-contacto').focus(); } }, 'Nueva oportunidad') : null)),
-  formNueva, tablero,
+  formNueva, flujo, tablero,
   el('p', { class: 'suave' }, escribe ? 'Arrastrá una tarjeta a otra columna para cambiarla de etapa. En el celular usá "Mover a…".' : 'Vista de consulta.'),
 );
 
@@ -77,11 +79,14 @@ async function cerrar(o, resultado, boton) {
 
 // ---------- Tablero ----------
 function tarjeta(o) {
+  const quien = o.owner ? nombreVendedor.get(String(o.owner)) || 'Consultor' : null;
   const t = el('article', { class: 'op', draggable: escribe ? 'true' : 'false', 'data-id': o._id },
     el('a', { class: 'titulo', href: `/contacto?id=${o.contactoId}` }, o.titulo),
-    el('div', { class: 'meta' }, [o.contactoNombre, o.empresaNombre].filter(Boolean).join(' · ')),
-    el('div', {}, el('span', { class: 'valor' }, moneda(o.valorEstimado)), el('span', { class: 'meta' }, ` · ${o.probabilidad} %`)),
-    o.fechaCierreEsperada ? el('div', { class: 'meta' }, `Cierre esperado ${fecha(o.fechaCierreEsperada)}`) : null);
+    el('div', { class: 'meta' }, o.empresaNombre && o.empresaNombre !== o.contactoNombre ? `${o.contactoNombre}, ${o.empresaNombre}` : o.contactoNombre),
+    el('div', { class: 'pie-op' },
+      el('span', {}, el('span', { class: 'valor' }, moneda(o.valorEstimado)), el('span', { class: 'meta' }, ` al ${o.probabilidad} %`)),
+      quien ? el('span', { class: 'iniciales', title: `A cargo de ${quien}` }, iniciales(quien)) : el('span', { class: 'meta' }, 'Sin asignar')),
+    o.fechaCierreEsperada ? el('div', { class: 'meta' }, `Cierre esperado: ${fecha(o.fechaCierreEsperada)}`) : null);
   if (escribe) {
     const mov = selector({ 'aria-label': `Mover ${o.titulo} a otra etapa` }, [['', 'Mover a…'], ...etapas.filter((e) => e.codigo !== o.etapa).map((e) => [e.codigo, e.nombre])]);
     mov.addEventListener('change', () => mov.value && mover(o._id, mov.value));
@@ -99,8 +104,11 @@ function tarjeta(o) {
 function columna(c) {
   const cuerpo = el('div', { class: 'tarjetas-col' }, c.items.length ? c.items.map(tarjeta) : el('p', { class: 'vacio' }, 'Sin oportunidades'));
   const col = el('section', { class: `columna${c.codigo === '_sin_etapa' ? ' huerfana' : ''}`, 'aria-label': c.nombre },
-    el('header', {}, el('strong', {}, c.nombre), el('span', {}, `${c.cantidad} · ${moneda(c.total)}${c.codigo === '_sin_etapa' ? ' · etapa eliminada de la configuración' : ` · ${c.probabilidad} %`}`)),
+    el('header', {}, el('strong', {}, c.nombre, c.codigo === '_sin_etapa' ? null : el('em', {}, `${c.probabilidad} %`)),
+      el('span', {}, c.codigo === '_sin_etapa' ? 'Etapa eliminada de la configuración: mové estas tarjetas' : `${c.cantidad} oportunidad${c.cantidad === 1 ? '' : 'es'}, ${moneda(c.total)}`)),
     cuerpo);
+  const i = etapas.findIndex((e) => e.codigo === c.codigo);
+  if (i >= 0) col.style.borderTop = `4px solid ${tonoEtapa(i, etapas.length)}`;
   if (escribe && c.codigo !== '_sin_etapa') {
     col.addEventListener('dragover', (ev) => { ev.preventDefault(); col.classList.add('sobre'); });
     col.addEventListener('dragleave', (ev) => { if (!col.contains(ev.relatedTarget)) col.classList.remove('sobre'); });
@@ -120,9 +128,17 @@ async function cargar() {
   etapas = r.columnas.filter((c) => c.codigo !== '_sin_etapa');
   if (formNueva && !formNueva.etapa.options.length) formNueva.etapa.append(...etapas.map((e) => el('option', { value: e.codigo }, `${e.nombre} (${e.probabilidad} %)`)));
   poner(vaciar(totales), 
-    el('div', {}, el('strong', {}, String(r.totales.cantidad)), 'oportunidades abiertas'),
+    el('div', {}, el('strong', {}, String(r.totales.cantidad)), `oportunidad${r.totales.cantidad === 1 ? '' : 'es'} abierta${r.totales.cantidad === 1 ? '' : 's'}`),
     el('div', {}, el('strong', {}, moneda(r.totales.total)), 'en juego'),
     el('div', {}, el('strong', {}, moneda(r.totales.ponderado)), 'esperado (según probabilidad)'));
+  const total = etapas.reduce((a, e) => a + e.total, 0);
+  poner(vaciar(flujo), ...etapas.map((e, i) => {
+    const tramo = el('div', { class: `tramo${e.total ? '' : ' vacio-tramo'}`, title: `${e.nombre}: ${moneda(e.total)}` });
+    if (e.total) { tramo.style.flex = `${e.total / total} 1 0`; tramo.style.backgroundColor = tonoEtapa(i, etapas.length); }
+    return tramo;
+  }));
+  flujo.setAttribute('aria-label', `Flujo: ${etapas.map((e) => `${e.nombre} ${moneda(e.total)}`).join(', ')}`);
+  flujo.classList.toggle('oculto', !total);
   poner(vaciar(tablero), ...r.columnas.map(columna));
 }
 

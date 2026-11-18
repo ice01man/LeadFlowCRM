@@ -1,16 +1,16 @@
 // Ficha de contacto: alta y edición. /contacto?nuevo=1  o  /contacto?id=...
-import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, parametro, fecha, fechaHora, moneda, ETAPA, TIPO_ACTIVIDAD, RESULTADO, PRIORIDAD } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, parametro, fecha, fechaHora, moneda, ETAPA, TIPO_ACTIVIDAD, RESULTADO, PRIORIDAD, filaTarea } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.organizacion) location.replace('/clientes');
+if (!s.organizacion) await irA('/clientes');
 barra(s, '/contactos');
 
 const gestiona = ['admin', 'consultor'].includes(s.usuario.rol);
 const escribe = gestiona || s.usuario.rol === 'vendedor';
 const id = parametro('id');
 const nuevo = !id;
-if (nuevo && !escribe) location.replace('/contactos');
+if (nuevo && !escribe) await irA('/contactos');
 
 const app = vaciar(document.getElementById('app'));
 const [opciones, empresas, c] = await Promise.all([
@@ -175,16 +175,12 @@ async function cargarTareas() {
   const lista = [...r.vencidas, ...r.hoy, ...r.proximas, ...r.sinFecha];
   vaciar(cajaTareas);
   if (!lista.length) { cajaTareas.append(el('li', { class: 'vacio' }, 'Sin tareas pendientes.')); return; }
-  cajaTareas.append(...lista.map((t) => {
-    const check = el('input', { type: 'checkbox', 'aria-label': `Completar ${t.titulo}`, disabled: !escribe || t.bloqueadaPor.length > 0 });
-    check.addEventListener('change', async () => {
-      try { await api('PATCH', `/crm/tareas/${t._id}/estado`, { estado: 'completada' }); aviso('Tarea completada.'); } catch (e) { aviso(e.message, 'error'); }
+  cajaTareas.append(...lista.map((t) => filaTarea(t, {
+    alCambiar: escribe ? async (tarea, check) => {
+      try { await api('PATCH', `/crm/tareas/${tarea._id}/estado`, { estado: 'completada' }); aviso('Tarea completada.'); } catch (e) { aviso(e.message, 'error'); check.checked = false; }
       await cargarTareas();
-    });
-    return el('li', {}, check, el('div', { class: 'info' }, el('strong', {}, t.titulo),
-      el('div', { class: 'suave chico-texto' }, t.fechaVencimiento ? `Vence ${fecha(t.fechaVencimiento)}` : 'Sin fecha')),
-      el('span', { class: `etiqueta ${t.prioridad}` }, PRIORIDAD[t.prioridad]));
-  }));
+    } : null,
+  })));
 }
 
 if (!nuevo) {

@@ -60,6 +60,8 @@ export async function importar(ctx, { csv, mapeo, opciones = {} } = {}) {
   const porEmail = new Map(existentes.filter((c) => c.email).map((c) => [c.email, c]));
   const porTel = new Map(existentes.filter((c) => c.telefonoNormalizado).map((c) => [c.telefonoNormalizado, c]));
   const empresasCache = new Map();
+  const claveUbicacion = (c) => [c.nombre, c.apellido, c.direccion, c.localidad].map(normalizar).join('|');
+  const porUbicacion = new Map(existentes.filter((c) => !c.email && !c.telefonoNormalizado).map((c) => [claveUbicacion(c), c]));
 
   const r = { total: filas.length, creados: 0, actualizados: 0, omitidos: 0, empresasCreadas: 0, advertencias: 0, errores: [] };
   const error = (n, motivo) => { if (r.errores.length < MAX_ERRORES) r.errores.push({ fila: n, motivo }); };
@@ -80,13 +82,18 @@ export async function importar(ctx, { csv, mapeo, opciones = {} } = {}) {
         nombre = partes[0];
       }
 
-      const email = valor(fila, 'email').toLowerCase();
-      if (email && !EMAIL.test(email)) { error(n, `Email inválido: ${email}`); continue; }
+      // Datos sucios (un email mal escrito, una fecha en la columna del teléfono): no se pierde la fila.
+      // El dato se guarda en las notas y se avisa; el contacto se carga igual.
+      const notasExtra = [];
+      let advertencia = false;
+      let email = valor(fila, 'email').toLowerCase();
+      if (email && !EMAIL.test(email)) { notasExtra.push(`Email inválido en el archivo: ${email}`); email = ''; advertencia = true; }
+      let telefono = valor(fila, 'telefono');
+      if (telefono && (soloDigitos(telefono).length < 6 || /^\d{4}-\d{2}-\d{2}/.test(telefono) || /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(telefono))) { notasExtra.push(`Teléfono inválido en el archivo: ${telefono}`); telefono = ''; advertencia = true; }
       const etiquetas = valor(fila, 'etiquetas').split(/[,|]/).map((e) => e.trim()).filter(Boolean);
       if (etiquetaLote) etiquetas.push(etiquetaLote);
 
       let segmento = '';
-      let advertencia = false;
       const segTexto = valor(fila, 'segmento');
       if (segTexto) {
         segmento = segmentos.get(normalizar(segTexto)) || '';
@@ -94,9 +101,9 @@ export async function importar(ctx, { csv, mapeo, opciones = {} } = {}) {
       }
 
       const datos = {
-        nombre, apellido, email, telefono: valor(fila, 'telefono'), cargo: valor(fila, 'cargo'),
+        nombre, apellido, email, telefono, cargo: valor(fila, 'cargo'),
         direccion: valor(fila, 'direccion'), municipio: valor(fila, 'municipio'), localidad: valor(fila, 'localidad'),
-        notas: valor(fila, 'notas'), segmento, etiquetas: [...new Set(etiquetas)].slice(0, 20),
+        notas: [valor(fila, 'notas'), ...notasExtra].filter(Boolean).join(' | ').slice(0, 3000), segmento, etiquetas: [...new Set(etiquetas)].slice(0, 20),
       };
       const etapa = etapaDesdeTexto(valor(fila, 'lifecycleStage'));
       if (etapa) datos.lifecycleStage = etapa;
@@ -104,10 +111,11 @@ export async function importar(ctx, { csv, mapeo, opciones = {} } = {}) {
       if (lat && lng) { datos.lat = lat; datos.lng = lng; }
 
       if (empresaNombre) {
-        const clave = normalizar(empresaNombre);
+        // Mismo nombre en otra localidad = otro comercio (por ejemplo, sucursales de "Bebidas La Esquina").
+        const clave = `${normalizar(empresaNombre)}|${normalizar(datos.localidad)}`;
         let emp = empresasCache.get(clave);
         if (!emp) {
-          emp = await empresas.buscarPorNombre(ctx, empresaNombre);
+          emp = await empresas.buscarPorNombre(ctx, empresaNombre, datos.localidad);
           if (!emp) {
             const cuit = valor(fila, 'cuit');
             emp = await empresas.crear(ctx, { razonSocial: empresaNombre, cuit: /^\d{2}-?\d{8}-?\d$/.test(cuit) ? cuit : '', municipio: datos.municipio, localidad: datos.localidad, direccion: datos.direccion, segmento });
@@ -119,7 +127,8 @@ export async function importar(ctx, { csv, mapeo, opciones = {} } = {}) {
       }
 
       const tel = soloDigitos(datos.telefono);
-      const dup = (email && porEmail.get(email)) || (tel && porTel.get(tel));
+      const claveSinContacto = !email && !tel ? claveUbicacion(datos) : '';
+      const dup = (email && porEmail.get(email)) || (tel && porTel.get(tel)) || (claveSinContacto && porUbicacion.get(claveSinContacto));
       if (dup) {
         if (duplicados === 'omitir') { r.omitidos += 1; continue; }
         // Actualizar: solo se completan los campos que vienen con dato; no se pisa con vacíos.
@@ -136,6 +145,7 @@ export async function importar(ctx, { csv, mapeo, opciones = {} } = {}) {
       const nuevo = await contactos.crear(ctx, datos, { origen: 'importacion', omitirDuplicados: true });
       if (nuevo.email) porEmail.set(nuevo.email, nuevo);
       if (tel) porTel.set(tel, { ...nuevo, telefonoNormalizado: tel });
+      if (claveSinContacto) porUbicacion.set(claveSinContacto, nuevo);
       r.creados += 1;
       if (advertencia) r.advertencias += 1;
     } catch (e) {

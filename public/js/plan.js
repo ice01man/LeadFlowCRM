@@ -1,11 +1,11 @@
 // Plan de consultoría del cliente.
 // Consultor (superadmin): edita propuesta, documentos, metas y fases; cambia el estado; lleva la bitácora privada.
 // Cliente: lo ve en solo lectura; su administrador marca las tareas que le tocan.
-import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, fecha, fechaInput, fechaHora, moneda } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, fecha, fechaInput, fechaHora, moneda } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.organizacion) location.replace('/clientes');
+if (!s.organizacion) await irA('/clientes');
 barra(s, '/plan');
 
 const app = document.getElementById('app');

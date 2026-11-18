@@ -49,11 +49,14 @@ export async function obtener(ctx, id) {
 }
 
 /** Busca por razón social exacta (sin acentos ni mayúsculas). La usa la importación para no duplicar. */
-export async function buscarPorNombre(ctx, razonSocial) {
+export async function buscarPorNombre(ctx, razonSocial, localidad) {
   const n = normalizar(razonSocial);
   if (!n) return null;
-  const candidatas = await ctx.db.empresas.list({ busqueda: { $regex: `^${escaparRegex(n)}` }, activa: true }, { limit: 20 });
-  return candidatas.find((e) => normalizar(e.razonSocial) === n) || null;
+  const candidatas = await ctx.db.empresas.list({ busqueda: { $regex: `^${escaparRegex(n)}` }, activa: true }, { limit: 50 });
+  const mismas = candidatas.filter((e) => normalizar(e.razonSocial) === n);
+  // Si se indica localidad, tiene que coincidir: el mismo nombre en otra localidad es otro comercio.
+  if (localidad !== undefined) return mismas.find((e) => normalizar(e.localidad) === normalizar(localidad)) || null;
+  return mismas[0] || null;
 }
 
 export async function crear(ctx, datos = {}) {

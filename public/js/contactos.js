@@ -1,9 +1,9 @@
 // Listado de contactos: búsqueda, filtros, vistas guardadas, asignación masiva y exportación.
-import { el, poner, vaciar, sesion, barra, aviso, conBoton, selector, parametro, ETAPA } from './ui.js';
+import { el, irA, poner, vaciar, sesion, barra, aviso, conBoton, selector, parametro, iniciales, ETAPA } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (!s.organizacion) location.replace('/clientes');
+if (!s.organizacion) await irA('/clientes');
 barra(s, '/contactos');
 
 const gestiona = ['admin', 'consultor'].includes(s.usuario.rol);
@@ -14,7 +14,7 @@ const [opciones, vistas] = await Promise.all([api('GET', '/crm/contactos/opcione
 const nombreVendedor = new Map(opciones.vendedores.map((v) => [v._id, v.nombre]));
 
 // ---------- Estado ----------
-const estado = { vista: 'todos', q: '', segmento: '', municipio: '', lifecycleStage: '', owner: '', empresaId: parametro('empresa') || '', pagina: 1, orden: 'recientes' };
+const estado = { vista: parametro('vista') || 'todos', q: '', segmento: '', municipio: '', lifecycleStage: '', owner: '', empresaId: parametro('empresa') || '', pagina: 1, orden: 'recientes' };
 const seleccion = new Set();
 
 // ---------- Controles ----------
@@ -126,17 +126,18 @@ async function cargar() {
   });
   tabla.append(el('table', {},
     el('thead', {}, el('tr', {}, gestiona ? el('th', {}, todos) : null,
-      [['Nombre'], ['Empresa', 'sec'], ['Teléfono'], ['Tipo', 'sec'], ['Municipio', 'sec'], ['Etapa', 'sec'], gestiona ? ['Vendedor', 'sec'] : null].filter(Boolean).map(([t, c]) => el('th', { class: c }, t)))),
+      [['Nombre'], ['Empresa', 'sec'], ['Teléfono'], ['Tipo', 'sec'], ['Zona', 'sec'], ['Etapa', 'sec'], gestiona ? ['Vendedor', 'sec'] : null].filter(Boolean).map(([t, c]) => el('th', { class: c }, t)))),
     el('tbody', {}, r.items.map((c) => {
       const check = el('input', { type: 'checkbox', 'aria-label': `Seleccionar ${c.nombre}` });
       check.addEventListener('change', () => { if (check.checked) seleccion.add(c._id); else seleccion.delete(c._id); dibujarSeleccion(); });
       return el('tr', {},
         gestiona ? el('td', {}, check) : null,
-        el('td', {}, el('a', { href: `/contacto?id=${c._id}` }, [c.nombre, c.apellido].filter(Boolean).join(' ')), c.email ? el('div', { class: 'suave chico-texto' }, c.email) : null, c.empresaNombre ? el('div', { class: 'suave chico-texto solo-movil' }, c.empresaNombre) : null),
-        el('td', { class: 'sec' }, c.empresaNombre || '—'),
+        el('td', {}, el('div', { class: 'persona' }, el('span', { class: 'iniciales', 'aria-hidden': 'true' }, iniciales([c.nombre, c.apellido].filter(Boolean).join(' '))),
+          el('div', {}, el('a', { href: `/contacto?id=${c._id}` }, [c.nombre, c.apellido].filter(Boolean).join(' ')), c.email ? el('div', { class: 'suave chico-texto' }, c.email) : null, c.empresaNombre && c.empresaNombre !== c.nombre ? el('div', { class: 'suave chico-texto solo-movil' }, c.empresaNombre) : null))),
+        el('td', { class: 'sec' }, c.empresaNombre && c.empresaNombre !== c.nombre ? c.empresaNombre : el('span', { class: 'suave' }, '—')),
         el('td', { class: 'sin-corte' }, c.telefono ? el('a', { href: `tel:${c.telefono.replace(/[^\d+]/g, '')}` }, c.telefono) : el('span', { class: 'suave' }, '—')),
         el('td', { class: 'sec' }, c.segmento || '—'),
-        el('td', { class: 'sec' }, c.municipio || '—'),
+        el('td', { class: 'sec' }, c.localidad || c.municipio || '—', c.localidad && c.municipio && c.localidad !== c.municipio ? el('div', { class: 'suave chico-texto' }, c.municipio) : null),
         el('td', { class: 'sec' }, el('span', { class: 'etiqueta' }, ETAPA[c.lifecycleStage] || c.lifecycleStage)),
         gestiona ? el('td', { class: 'sec' }, c.owner ? nombreVendedor.get(c.owner) || '—' : el('span', { class: 'suave' }, 'Sin asignar')) : null);
     }))));
