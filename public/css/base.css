@@ -192,3 +192,33 @@ button.ganar { background: #1e7a46; color: #fff; }
 .op a.titulo { text-decoration: none; }
 .op a.titulo:hover { text-decoration: underline; }
 .encabezado .acciones select { width: auto; min-width: 200px; padding: 9px 12px; font-size: .95rem; }
+
+/* ---- Consultoría ---- */
+.selector-org { width: auto; max-width: 220px; padding: 5px 8px; font-size: .85rem; margin-left: 4px; }
+.cliente { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.cliente h2 { margin: 0; font-size: 1.1rem; }
+.clientes-grilla { display: grid; gap: 14px; grid-template-columns: 1fr; margin-top: 16px; }
+@media (min-width: 760px) { .clientes-grilla { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1100px) { .clientes-grilla { grid-template-columns: 1fr 1fr 1fr; } }
+.semaforo { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--suave); }
+.semaforo::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #9aa3ad; }
+.semaforo.verde::before { background: #1e9e55; }
+.semaforo.amarillo::before { background: #e0a400; }
+.semaforo.rojo::before { background: #d23b30; }
+.barra-avance { height: 8px; border-radius: 99px; background: var(--fondo); border: 1px solid var(--borde); overflow: hidden; }
+.barra-avance span { display: block; height: 100%; background: var(--acento); }
+.mini-metricas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mini-metricas div { font-size: .78rem; color: var(--suave); }
+.mini-metricas strong { display: block; font-size: 1.05rem; color: var(--texto); }
+.cliente .acciones { margin-top: 4px; }
+.alerta { color: var(--error); font-size: .85rem; }
+.fase { border: 1px solid var(--borde); border-radius: var(--radio); padding: 12px; margin-top: 12px; }
+.fase-cab { display: grid; gap: 8px; grid-template-columns: 1fr; align-items: end; }
+@media (min-width: 720px) { .fase-cab { grid-template-columns: 2fr 1fr 1fr auto; } }
+.fase table input, .fase table select { padding: 6px 8px; font-size: .9rem; }
+.fila-doc { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; margin-top: 6px; }
+.estado-plan { display: inline-block; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--acento); color: var(--acento); font-size: .85rem; font-weight: 600; }
+.metas-tabla td input { max-width: 110px; }
+.comparacion td.num, .comparacion th.num { text-align: right; }
+.metas-tabla td:first-child input { max-width: none; min-width: 200px; }
+.metas-tabla td:nth-child(2) input { max-width: 120px; }

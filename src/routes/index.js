@@ -1,6 +1,6 @@
 // Todas las rutas de la API. Cada fase agrega acá su router.
 import { Router } from 'express';
-import { authRequired, requireRol, requireOrganizacion } from '../middleware/auth.js';
+import { authRequired, requireRol, requireOrganizacion, requireSuperadmin } from '../middleware/auth.js';
 import { limitador } from '../middleware/limitador.js';
 import { ROL, ROLES_IA } from '../config/roles.js';
 import { MODO, LLM } from '../config/env.js';
@@ -11,6 +11,7 @@ import * as orgC from '../controllers/organizacionController.js';
 import * as verticalC from '../controllers/verticalController.js';
 import * as configC from '../controllers/configController.js';
 import { crm } from './crm.js';
+import { plataforma, rutasConsultoria } from './consultoria.js';
 
 export const api = Router();
 
@@ -22,6 +23,7 @@ const auth = Router();
 auth.post('/login', limitador({ max: 10 }), authC.login);
 auth.post('/logout', authC.logout);
 auth.get('/me', authRequired, authC.me);
+auth.post('/organizacion', authRequired, requireSuperadmin, authC.elegirOrganizacion);
 api.use('/auth', auth);
 
 // Marca: nombre, eslogan, colores y logos (público, para que el frontend y futuras integraciones usen lo mismo).
@@ -64,5 +66,9 @@ api.use('/organizacion/config', config);
 
 // CRM: contactos, empresas, vistas, importación
 api.use('/crm', crm);
+
+// Consultoría: panel de clientes, plan y bitácora
+api.use('/plataforma', plataforma);
+api.use('/consultoria', rutasConsultoria);
 
 api.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

@@ -3,7 +3,7 @@ import { el, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
-if (s.usuario.rol !== 'superadmin') location.replace('/inicio');
+if (!s.esSuperadmin) location.replace('/inicio');
 barra(s, '/plataforma');
 
 const app = vaciar(document.getElementById('app'));

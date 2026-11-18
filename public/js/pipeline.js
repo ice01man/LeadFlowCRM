@@ -4,7 +4,7 @@ import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector, mon
 import { api } from './api.js';
 
 const s = await sesion();
-if (s.usuario.rol === 'superadmin') location.replace('/plataforma');
+if (!s.organizacion) location.replace('/clientes');
 barra(s, '/pipeline');
 
 const gestiona = ['admin', 'consultor'].includes(s.usuario.rol);

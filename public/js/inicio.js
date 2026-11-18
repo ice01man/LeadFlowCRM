@@ -8,14 +8,15 @@ const { usuario, organizacion } = s;
 
 poner(app, 
   el('h1', {}, `Hola, ${usuario.nombre}`),
-  el('p', { class: 'sub' }, organizacion ? `${organizacion.nombre} · ${NOMBRE_ROL[usuario.rol]}` : 'Administración de la plataforma'),
+  el('p', { class: 'sub' }, organizacion ? `${organizacion.nombre} · ${s.esSuperadmin ? 'consultor (Revoluxia)' : NOMBRE_ROL[usuario.rol]}` : 'Tus consultorías y la administración de la plataforma'),
 );
 
 const tarjetas = el('div', { class: 'tarjetas' });
 const tarjeta = (href, titulo, texto) => el('a', { class: 'tarjeta-link', href }, el('strong', {}, titulo), el('span', { class: 'suave' }, texto));
 
-if (usuario.rol === 'superadmin') {
-  poner(tarjetas, tarjeta('/plataforma', 'Organizaciones', 'Dar de alta clientes del SaaS, elegir su rubro y suspender o reactivar cuentas.'));
+if (!organizacion) {
+  poner(tarjetas, tarjeta('/clientes', 'Mis clientes', 'Estado de cada consultoría: plan, avance, atrasos y cómo viene el CRM de cada cliente.'));
+  poner(tarjetas, tarjeta('/plataforma', 'Organizaciones', 'Dar de alta clientes, elegir su rubro y suspender o reactivar cuentas.'));
   poner(tarjetas, tarjeta('/plataforma#verticales', 'Plantillas de vertical', 'Ver las configuraciones de vinos, granja, seguros y los rubros que agregues.'));
 } else {
   let vertical = '';
@@ -33,6 +34,7 @@ if (usuario.rol === 'superadmin') {
   poner(tarjetas, 
     tarjeta('/pipeline', 'Pipeline', 'Oportunidades por etapa: arrastrá para avanzar, marcá ganadas o perdidas.'),
     tarjeta('/tareas', 'Tareas', 'Lo pendiente, ordenado por vencimiento.'),
+    tarjeta('/plan', 'Plan de consultoría', s.esSuperadmin ? 'Propuesta, metas, fases, bitácora e impacto en el CRM.' : 'La propuesta de trabajo de tu consultor: fases, tareas y avance.'),
   );
 }
 poner(app, tarjetas);

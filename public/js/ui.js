@@ -63,20 +63,36 @@ export async function sesion() {
 }
 
 /** Barra superior con marca, navegación según rol y salida. */
-export function barra({ usuario, organizacion }, activa = '') {
+export function barra({ usuario, organizacion, esSuperadmin }, activa = '') {
   const links = [['/inicio', 'Inicio']];
-  if (usuario.rol === 'superadmin') links.push(['/plataforma', 'Plataforma']);
-  else links.push(['/contactos', 'Contactos'], ['/pipeline', 'Pipeline'], ['/tareas', 'Tareas'], ['/empresas', 'Empresas'], ['/configuracion', 'Configuración']);
+  if (esSuperadmin) links.push(['/clientes', 'Mis clientes']);
+  if (organizacion) links.push(['/contactos', 'Contactos'], ['/pipeline', 'Pipeline'], ['/tareas', 'Tareas'], ['/empresas', 'Empresas'], ['/plan', 'Plan'], ['/configuracion', 'Configuración']);
+  else if (esSuperadmin) links.push(['/plataforma', 'Plataforma']);
   const nav = el('nav', { class: 'nav', 'aria-label': 'Secciones' },
     links.map(([href, texto]) => el('a', { href, class: href === activa ? 'activo' : '', 'aria-current': href === activa ? 'page' : false }, texto)));
   const salir = el('button', { type: 'button', class: 'secundario chico', onclick: async () => { await api('POST', '/auth/logout').catch(() => {}); location.replace('/'); } }, 'Salir');
+
+  // El consultor (superadmin) elige en qué cliente trabajar sin cerrar sesión.
+  let ubicacion = el('span', { class: 'suave' }, organizacion ? organizacion.nombre : NOMBRE_ROL.superadmin);
+  if (esSuperadmin) {
+    const sel = el('select', { class: 'selector-org', 'aria-label': 'Cliente en el que trabajás' }, el('option', { value: '' }, 'Plataforma (todos)'));
+    api('GET', '/organizaciones').then((orgs) => {
+      sel.append(...orgs.map((o) => el('option', { value: o._id }, `${o.nombre}${o.activa ? '' : ' (suspendida)'}`)));
+      sel.value = organizacion?._id || '';
+    }).catch(() => {});
+    sel.addEventListener('change', async () => {
+      await api('POST', '/auth/organizacion', { organizacionId: sel.value || null });
+      location.href = sel.value ? '/inicio' : '/clientes';
+    });
+    ubicacion = el('label', { class: 'suave chico-texto', title: 'Consultor externo: Revoluxia' }, 'Cliente ', sel);
+  }
   const header = el('header', { class: 'barra' },
     el('a', { href: '/inicio', class: 'marca', 'aria-label': 'LeadFlow CRM, inicio' },
       el('img', { class: 'logo-isotipo solo-claro', src: '/img/revoluxia-isotipo.png', alt: '' }),
       el('img', { class: 'logo-isotipo solo-oscuro', src: '/img/revoluxia-isotipo-claro.png', alt: '' }),
       el('span', {}, el('span', { class: 'producto' }, 'LeadFlow CRM'), el('span', { class: 'empresa' }, 'Revoluxia · soluciones tecnológicas'))),
     nav,
-    el('div', { class: 'usuario' }, el('span', {}, usuario.nombre), el('span', { class: 'suave' }, organizacion ? organizacion.nombre : NOMBRE_ROL.superadmin), salir));
+    el('div', { class: 'usuario' }, el('span', {}, esSuperadmin ? `${usuario.nombre} · consultor` : usuario.nombre), ubicacion, salir));
   document.body.prepend(header);
 }
 

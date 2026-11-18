@@ -3,7 +3,7 @@ import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector } fr
 import { api } from './api.js';
 
 const s = await sesion();
-if (s.usuario.rol === 'superadmin') location.replace('/plataforma');
+if (!s.organizacion) location.replace('/clientes');
 barra(s, '/empresas');
 
 const escribe = ['admin', 'consultor', 'vendedor'].includes(s.usuario.rol);

@@ -17,6 +17,7 @@ async function etapas(ctx) {
 async function ownerValido(ctx, owner) {
   if (!owner) return null;
   if (typeof owner !== 'string') throw badRequest('Vendedor inválido.');
+  if (ctx.usuario.esSuperadmin && owner === ctx.usuario.id) return owner; // el consultor se asigna a sí mismo
   const u = await ctx.db.usuarios.get(owner);
   if (!u || u.activo === false || !ROLES_OWNER.includes(u.rol)) throw badRequest('El vendedor no existe en tu organización.');
   return String(u._id);

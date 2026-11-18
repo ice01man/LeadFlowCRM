@@ -43,6 +43,7 @@ async function segmentoValido(ctx, segmento) {
 async function ownerValido(ctx, owner) {
   if (owner === null || owner === '' || owner === undefined) return null;
   if (typeof owner !== 'string') throw badRequest('Vendedor asignado inválido.');
+  if (ctx.usuario.esSuperadmin && owner === ctx.usuario.id) return owner; // el consultor se asigna a sí mismo
   const u = await ctx.db.usuarios.get(owner);
   if (!u || u.activo === false || !ROLES_OWNER.includes(u.rol)) throw badRequest('El vendedor asignado no existe en tu organización o no puede tener contactos.');
   return String(u._id);
@@ -224,7 +225,10 @@ export async function opciones(ctx) {
     etiquetas: unicos(todos.flatMap((c) => c.etiquetas || [])),
     segmentos: org.config?.categoriasNegocio || [],
     etapas: ETAPAS_CICLO,
-    vendedores: usuarios.map((u) => ({ _id: u._id, nombre: u.nombre, rol: u.rol })),
+    vendedores: [
+      ...usuarios.map((u) => ({ _id: u._id, nombre: u.nombre, rol: u.rol })),
+      ...(ctx.usuario.esSuperadmin ? [{ _id: ctx.usuario.id, nombre: `${ctx.usuario.nombre} (consultor)`, rol: 'consultor_externo' }] : []),
+    ],
   };
 }
 

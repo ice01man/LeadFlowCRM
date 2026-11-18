@@ -26,6 +26,7 @@ async function ownerValido(ctx, owner) {
   }
   if (!owner) return ctx.usuario.id;
   if (typeof owner !== 'string') throw badRequest('Responsable inválido.');
+  if (ctx.usuario.esSuperadmin && owner === ctx.usuario.id) return owner; // el consultor se asigna a sí mismo
   const u = await ctx.db.usuarios.get(owner);
   if (!u || u.activo === false || !ROLES_OWNER.includes(u.rol)) throw badRequest('El responsable no existe en tu organización.');
   return String(u._id);
