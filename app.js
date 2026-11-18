@@ -30,7 +30,10 @@ export function crearApp() {
     },
   }));
   app.use(cors({ origin: CORS_ORIGIN.length ? CORS_ORIGIN : false }));
-  app.use(express.json({ limit: '200kb' }));
+  // JSON chico para todo, salvo la importación de CSV (que viaja como texto dentro del JSON).
+  const jsonChico = express.json({ limit: '200kb' });
+  const jsonImportacion = express.json({ limit: '6mb' });
+  app.use((req, res, next) => (req.path.startsWith('/api/crm/importar') ? jsonImportacion : jsonChico)(req, res, next));
 
   app.use('/api', api);
   app.use(express.static(join(RAIZ, 'public'), { extensions: ['html'] }));

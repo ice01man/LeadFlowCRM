@@ -10,6 +10,7 @@ import * as usuarioC from '../controllers/usuarioController.js';
 import * as orgC from '../controllers/organizacionController.js';
 import * as verticalC from '../controllers/verticalController.js';
 import * as configC from '../controllers/configController.js';
+import { crm } from './crm.js';
 
 export const api = Router();
 
@@ -60,5 +61,8 @@ config.get('/', configC.obtener);
 config.patch('/', requireRol(...ROLES_IA), configC.actualizar);
 config.post('/restaurar', requireRol(ROL.ADMIN), configC.restaurar);
 api.use('/organizacion/config', config);
+
+// CRM: contactos, empresas, vistas, importación
+api.use('/crm', crm);
 
 api.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

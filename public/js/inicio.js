@@ -26,6 +26,10 @@ if (usuario.rol === 'superadmin') {
   const puedeEditar = ['admin', 'consultor'].includes(usuario.rol);
   tarjetas.append(tarjeta('/configuracion', 'Configuración comercial',
     `${vertical ? `Rubro: ${vertical}. ` : ''}${puedeEditar ? 'Ajustá etapas del pipeline, pesos BANT y categorías.' : 'Etapas del pipeline, criterios BANT, guiones de visita y plantillas de email.'}`));
-  tarjetas.append(el('div', { class: 'tarjeta-link' }, el('strong', {}, 'Contactos, pipeline y ventas'), el('span', { class: 'suave' }, 'Llegan en la próxima fase.')));
+  tarjetas.prepend(
+    tarjeta('/contactos', 'Contactos', s.usuario.rol === 'vendedor' ? 'Tu cartera de clientes y prospectos.' : 'Cartera completa, vistas guardadas, asignación a vendedores e importación CSV.'),
+    tarjeta('/empresas', 'Empresas', 'Comercios y organizaciones con las que trabajás.'),
+  );
+  tarjetas.append(el('div', { class: 'tarjeta-link' }, el('strong', {}, 'Pipeline, actividades y ventas'), el('span', { class: 'suave' }, 'Llegan en las próximas entregas.')));
 }
 app.append(tarjetas);

@@ -18,6 +18,23 @@ export function el(tag, attrs = {}, ...hijos) {
 
 export const vaciar = (n) => { while (n.firstChild) n.firstChild.remove(); return n; };
 
+export const ETAPA = { lead: 'Lead', calificado: 'Calificado', oportunidad: 'Oportunidad', cliente: 'Cliente', fidelizado: 'Fidelizado' };
+
+/** Lee parámetros de la URL actual. */
+export const parametro = (n) => new URLSearchParams(location.search).get(n);
+
+/** Campo con etiqueta para formularios. */
+export const campo = (etiqueta, input, ayuda) => el('div', { class: 'campo' }, el('label', { for: input.id }, etiqueta), input, ayuda ? el('div', { class: 'suave chico-texto' }, ayuda) : null);
+
+/** <select> a partir de pares [valor, texto]. */
+export const selector = (attrs, opciones, valor = '') => {
+  const s = el('select', attrs, opciones.map(([v, t]) => el('option', { value: v }, t)));
+  s.value = valor ?? '';
+  return s;
+};
+
+export const fecha = (d) => (d ? new Date(d).toLocaleDateString('es-AR') : '—');
+
 export const NOMBRE_ROL = { superadmin: 'Superadmin', admin: 'Administrador', consultor: 'Consultor', vendedor: 'Vendedor', lectura: 'Solo lectura' };
 
 /** Exige sesión; si no hay, vuelve al login. Devuelve { usuario, organizacion }. */
@@ -34,7 +51,7 @@ export async function sesion() {
 export function barra({ usuario, organizacion }, activa = '') {
   const links = [['/inicio', 'Inicio']];
   if (usuario.rol === 'superadmin') links.push(['/plataforma', 'Plataforma']);
-  else links.push(['/configuracion', 'Configuración comercial']);
+  else links.push(['/contactos', 'Contactos'], ['/empresas', 'Empresas'], ['/configuracion', 'Configuración']);
   const nav = el('nav', { class: 'nav', 'aria-label': 'Secciones' },
     links.map(([href, texto]) => el('a', { href, class: href === activa ? 'activo' : '', 'aria-current': href === activa ? 'page' : false }, texto)));
   const salir = el('button', { type: 'button', class: 'secundario chico', onclick: async () => { await api('POST', '/auth/logout').catch(() => {}); location.replace('/'); } }, 'Salir');

@@ -12,12 +12,17 @@ import { repoTenant } from './tenant.js';
 
 export const db = {
   plataforma: {},
+  /** Repos crudos de las colecciones de negocio. NUNCA se usan directo: solo a través de db.org(id). */
+  _negocio: {},
   /** Repos de una organización. Cada fase agrega acá sus colecciones (contactos, ventas, etc.). */
   org(organizacionId) {
     const id = organizacionId ? String(organizacionId) : '';
     return {
       organizacionId: id,
       usuarios: repoTenant(this.plataforma.usuarios, id),
+      empresas: repoTenant(this._negocio.empresas, id),
+      contactos: repoTenant(this._negocio.contactos, id),
+      vistas: repoTenant(this._negocio.vistas, id),
     };
   },
 };
@@ -33,10 +38,20 @@ export async function iniciarStore() {
     db.plataforma.organizaciones = repoMongo(Organizacion);
     db.plataforma.usuarios = repoMongo(Usuario);
     db.plataforma.verticales = repoMongo(Vertical);
+    const [Empresa, Contacto, Vista] = (await Promise.all([
+      import('../models/Empresa.js'), import('../models/Contacto.js'), import('../models/VistaContactos.js'),
+    ])).map((m) => m.default);
+    await Promise.all([Empresa.init(), Contacto.init(), Vista.init()]);
+    db._negocio.empresas = repoMongo(Empresa);
+    db._negocio.contactos = repoMongo(Contacto);
+    db._negocio.vistas = repoMongo(Vista);
   } else {
     db.plataforma.organizaciones = repoMemoria({ unique: ['nombre'], defaults: { cuit: '', verticalCodigo: '', plan: 'prueba', llmActivo: true, activa: true } });
     db.plataforma.usuarios = repoMemoria({ unique: ['email'], defaults: { telefono: '', activo: true, organizacionId: null } });
     db.plataforma.verticales = repoMemoria({ unique: ['codigo'], defaults: { descripcion: '', activo: true } });
+    db._negocio.empresas = repoMemoria({ defaults: { cuit: '', segmento: '', direccion: '', municipio: '', localidad: '', telefono: '', sitioWeb: '', notas: '', busqueda: '', activa: true } });
+    db._negocio.contactos = repoMemoria({ defaults: { empresaId: null, empresaNombre: '', owner: null, apellido: '', email: '', telefono: '', telefonoNormalizado: '', cargo: '', segmento: '', direccion: '', municipio: '', localidad: '', lifecycleStage: 'lead', etiquetas: [], notas: '', origen: 'manual', scoreBANT: 0, scoreIA: 0, scoreChurn: 0, fechaUltimaInteraccion: null, fechaUltimaCompra: null, busqueda: '', activo: true } });
+    db._negocio.vistas = repoMemoria({ defaults: { filtros: {}, compartida: false } });
   }
 }
 

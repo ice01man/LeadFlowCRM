@@ -101,3 +101,43 @@ pre.email { white-space: pre-wrap; background: var(--fondo); border: 1px solid v
 /* Solo lectura: el campo se ve como texto, no como algo editable. */
 input:disabled, textarea:disabled { background: transparent; border-color: transparent; color: var(--texto); padding-left: 0; resize: none; }
 form h3.sub { margin: 20px 0 0; font-weight: 600; color: var(--texto); }
+
+/* ---- CRM (Fase 2A) ---- */
+.chico-texto { font-size: .8rem; margin-top: 2px; }
+.campo { margin-bottom: 4px; }
+.encabezado { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.encabezado .acciones { margin-top: 0; }
+a.boton, a.boton:visited { display: inline-block; padding: 9px 16px; border-radius: 8px; background: var(--acento); color: var(--acento-texto); text-decoration: none; font-weight: 600; font-size: .95rem; }
+a.boton.secundario { background: transparent; color: var(--acento); border: 1px solid var(--borde); }
+.filtros { display: grid; gap: 10px; grid-template-columns: 1fr; margin-top: 14px; }
+@media (min-width: 720px) { .filtros { grid-template-columns: 2fr repeat(4, 1fr); } }
+.filtros input, .filtros select { padding: 8px 10px; font-size: .95rem; }
+.fila-vistas { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.fila-vistas select { width: auto; min-width: 220px; padding: 8px 10px; font-size: .95rem; }
+.fila-vistas button { margin: 0; width: auto; padding: 7px 12px; font-size: .9rem; }
+tr.clic { cursor: pointer; }
+tr.clic:hover td { background: var(--fondo); }
+td a { color: var(--acento); text-decoration: none; font-weight: 600; }
+.paginado { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px; flex-wrap: wrap; }
+.paginado button { margin: 0; width: auto; padding: 6px 12px; }
+.barra-seleccion { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--acento); border-radius: 8px; margin-top: 12px; }
+.barra-seleccion select { width: auto; padding: 6px 10px; }
+.barra-seleccion button { margin: 0; width: auto; padding: 6px 12px; }
+.oculto { display: none !important; }
+.pasos-asistente { display: flex; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; flex-wrap: wrap; }
+.pasos-asistente li { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--borde); color: var(--suave); font-size: .85rem; }
+.pasos-asistente li.actual { border-color: var(--acento); color: var(--acento); font-weight: 600; }
+.resumen-num { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.resumen-num div { border: 1px solid var(--borde); border-radius: 8px; padding: 10px 12px; }
+.resumen-num strong { display: block; font-size: 1.5rem; color: var(--acento); }
+.radios label { display: inline-flex; gap: 6px; align-items: center; margin-right: 16px; }
+.radios input { width: auto; }
+input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--acento); }
+.contenedor a:not(.boton):not(.tarjeta-link) { color: var(--acento); }
+.sin-corte { white-space: nowrap; }
+.solo-movil { display: none; }
+@media (max-width: 640px) {
+  th.sec, td.sec { display: none; }
+  .solo-movil { display: block; }
+  .encabezado .acciones { width: 100%; }
+}
