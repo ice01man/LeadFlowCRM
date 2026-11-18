@@ -27,7 +27,7 @@ async function cargar() {
   datos = await api('GET', '/consultoria/plan');
   borrador = datos.plan ? structuredClone(datos.plan) : { titulo: '', objetivo: '', alcance: '', fechaInicio: null, fechaFin: null, documentos: [], metas: [], fases: [] };
   dibujar();
-  if (datos.esConsultor) await cargarBitacora();
+  if (datos.esConsultor) await Promise.all([cargarBitacora(), cargarCobros()]);
 }
 
 function dibujar() {
@@ -40,6 +40,7 @@ function dibujar() {
       plan ? el('div', { class: 'acciones' }, el('span', { class: 'estado-plan' }, ESTADO[plan.estado]), ...(esConsultor ? accionesEstado(plan) : [])) : null),
     resumen ? seccionResumen(resumen) : null,
     esConsultor ? editor() : lectura(),
+    esConsultor ? seccionCobros() : null,
     esConsultor && plan?.metricasInicio ? seccionImpacto(plan, datos.metricasActuales) : null,
     esConsultor ? seccionBitacora() : null,
   );
@@ -233,4 +234,74 @@ async function cargarBitacora() {
     el('p', {}, b.texto))) : [el('li', { class: 'vacio' }, 'Sin entradas todavía.')]));
 }
 
+
+// ---------- Cobros (privados del consultor) ----------
+const SITUACION = { pendiente: 'Pendiente', listo: 'Listo para cobrar', facturado: 'Facturado', cobrado: 'Cobrado', cancelado: 'Cancelado' };
+const dinero = (n, moneda) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: moneda, maximumFractionDigits: 2 }).format(n || 0);
+const cajaCobros = el('div');
+const totalesCobros = el('div', { class: 'totales' });
+
+function seccionCobros() {
+  const fases = datos.plan?.fases || [];
+  const concepto = el('input', { id: 'c-concepto', maxlength: 150, placeholder: 'Ej.: Anticipo 30 %' });
+  const monto = el('input', { id: 'c-monto', type: 'number', min: 0, step: '0.01' });
+  const moneda = selector({ id: 'c-moneda' }, [['ARS', 'Pesos (ARS)'], ['USD', 'Dólares (USD)']], 'ARS');
+  const disparador = selector({ id: 'c-disparador' }, [['manual', 'Lo marco yo'], ['fase', 'Al completar una fase'], ['fecha', 'En una fecha']], 'manual');
+  const fase = selector({ id: 'c-fase' }, fases.map((f) => [f.codigo, f.nombre]));
+  const fechaEst = el('input', { id: 'c-fecha', type: 'date' });
+  const campoFase = campo('Fase', fase, fases.length ? null : 'Guardá primero el plan con sus fases.');
+  const ajustar = () => campoFase.classList.toggle('oculto', disparador.value !== 'fase');
+  disparador.addEventListener('change', ajustar);
+  ajustar();
+  const agregar = el('button', { type: 'button' }, 'Agregar cobro');
+  agregar.addEventListener('click', () => conBoton(agregar, async () => {
+    await api('POST', '/consultoria/cobros', { concepto: concepto.value, monto: monto.value, moneda: moneda.value, disparador: disparador.value, faseCodigo: disparador.value === 'fase' ? fase.value : '', fechaEstimada: fechaEst.value || null });
+    concepto.value = ''; monto.value = ''; fechaEst.value = '';
+    aviso('Cobro agregado.');
+    await cargarCobros();
+  }));
+  return el('section', { class: 'seccion' }, el('h2', {}, 'Cobros'), el('p', { class: 'sub' }, 'Privado: el cliente no ve esta sección. Un cobro atado a una fase pasa solo a "Listo para cobrar" cuando se completan sus tareas.'),
+    totalesCobros, cajaCobros,
+    el('h3', { class: 'sub' }, 'Nuevo hito de cobro'),
+    el('div', { class: 'campos' }, campo('Concepto', concepto), campo('Monto', monto), campo('Moneda', moneda), campo('Se cobra', disparador), campoFase, campo('Fecha estimada de cobro', fechaEst)),
+    el('div', { class: 'acciones' }, agregar));
+}
+
+async function cargarCobros() {
+  const r = await api('GET', '/consultoria/cobros');
+  vaciar(totalesCobros).append(...Object.entries(r.totales).flatMap(([mon, t]) => [
+    el('div', {}, el('strong', {}, dinero(t.cobrado, mon)), `cobrado de ${dinero(t.total, mon)}`),
+    el('div', {}, el('strong', {}, dinero(t.listo, mon)), 'listo para cobrar'),
+    t.vencido ? el('div', { class: 'alerta' }, el('strong', {}, dinero(t.vencido, mon)), 'vencido') : el('div', {}, el('strong', {}, dinero(t.porCobrar, mon)), 'por cobrar'),
+  ]));
+  vaciar(cajaCobros);
+  if (!r.items.length) { cajaCobros.append(el('p', { class: 'vacio' }, 'Sin hitos de cobro. Cargá los de la propuesta (anticipo, cierre de fases, abonos).')); return; }
+  const accion = (texto, fn, clase = 'icono') => el('button', { type: 'button', class: clase, onclick: fn }, texto);
+  const estado = async (c, est) => {
+    let comprobanteUrl;
+    if (est === 'cobrado') {
+      comprobanteUrl = prompt('Link de la factura o comprobante (opcional):', c.comprobanteUrl || '');
+      if (comprobanteUrl === null) return;
+    }
+    try { await api('POST', `/consultoria/cobros/${c._id}/estado`, { estado: est, comprobanteUrl: comprobanteUrl || undefined }); aviso('Cobro actualizado.'); } catch (e) { aviso(e.message, 'error'); }
+    await cargarCobros();
+  };
+  cajaCobros.append(el('div', { class: 'tabla-scroll' }, el('table', {},
+    el('thead', {}, el('tr', {}, ['Concepto', 'Monto', 'Cuándo', 'Situación', ''].map((t, i) => el('th', { class: i === 1 ? 'num' : '' }, t)))),
+    el('tbody', {}, r.items.map((c) => el('tr', {},
+      el('td', {}, el('strong', {}, c.concepto), c.comprobanteUrl ? el('div', {}, el('a', { href: c.comprobanteUrl, target: '_blank', rel: 'noopener', class: 'chico-texto' }, 'Comprobante')) : null),
+      el('td', { class: 'num sin-corte' }, dinero(c.monto, c.moneda)),
+      el('td', { class: 'chico-texto' }, c.disparador === 'fase' ? `Al completar "${c.faseNombre || 'fase eliminada'}"` : c.disparador === 'fecha' ? 'En la fecha' : 'Lo marco yo',
+        c.fechaEstimada ? el('div', { class: 'suave' }, `Estimado ${fecha(c.fechaEstimada)}`) : null,
+        c.fechaCobro ? el('div', { class: 'suave' }, `Cobrado ${fecha(c.fechaCobro)}`) : c.fechaFacturado ? el('div', { class: 'suave' }, `Facturado ${fecha(c.fechaFacturado)}`) : null),
+      el('td', {}, el('span', { class: `etiqueta ${c.situacion === 'cobrado' ? 'ok' : c.vencido ? 'no' : c.situacion === 'listo' ? 'ok' : ''}` }, `${SITUACION[c.situacion]}${c.vencido ? ' · vencido' : ''}`)),
+      el('td', {}, el('div', { class: 'acciones-celda' },
+        c.disparador === 'manual' && c.situacion === 'pendiente' ? accion('Listo', async () => { await api('PATCH', `/consultoria/cobros/${c._id}`, { listoManual: true }); await cargarCobros(); }) : null,
+        ['pendiente', 'listo'].includes(c.situacion) ? accion('Facturado', () => estado(c, 'facturado')) : null,
+        ['pendiente', 'listo', 'facturado'].includes(c.situacion) ? accion('Cobrado', () => estado(c, 'cobrado')) : null,
+        ['facturado', 'cobrado', 'cancelado'].includes(c.situacion) ? accion('Deshacer', () => estado(c, 'pendiente')) : null,
+        c.situacion !== 'cobrado' ? accion('Borrar', async () => { if (!confirm(`¿Borrar "${c.concepto}"?`)) return; try { await api('DELETE', `/consultoria/cobros/${c._id}`); } catch (e) { aviso(e.message, 'error'); } await cargarCobros(); }) : null))))))));
+}
+
+// Al final: todas las funciones y constantes de arriba ya están definidas.
 await cargar();

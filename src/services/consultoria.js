@@ -6,6 +6,7 @@ import { ESTADOS_TAREA_PLAN, RESPONSABLES_PLAN } from '../models/PlanConsultoria
 import { TIPOS_BITACORA } from '../models/Bitacora.js';
 import { ROL } from '../config/roles.js';
 import { textoOpcional, fechaOpcional } from '../crm/comun.js';
+import * as cobros from './cobros.js';
 import { badRequest, conflicto, noEncontrado, prohibido, texto } from '../utils/errores.js';
 
 const soloConsultor = (ctx) => { if (!ctx.usuario.esSuperadmin) throw prohibido('Solo el consultor puede hacer esto.'); };
@@ -234,13 +235,24 @@ export async function borrarBitacora(ctx, id) {
 
 export async function resumenClientes(ahora = new Date()) {
   const orgs = await db.plataforma.organizaciones.list({}, { sort: { nombre: 1 } });
-  return Promise.all(orgs.map(async (o) => {
+  const clientes = await Promise.all(orgs.map(async (o) => {
     const repos = db.org(String(o._id));
     const [metricas, plan] = await Promise.all([metricasCRM(repos, ahora), repos.planes.findOne({})]);
+    const c = await cobros.resumen(repos, plan, ahora);
     return {
+      cobros: { totales: c.totales, proximo: c.proximo, cantidad: c.items.length },
       _id: o._id, nombre: o.nombre, verticalCodigo: o.verticalCodigo, activa: o.activa, plan: o.plan,
       metricas, uso: semaforoUso(metricas.ultimaActividad, ahora),
       consultoria: plan ? { titulo: plan.titulo, fechaFin: plan.fechaFin, ...resumenPlan(plan, ahora) } : null,
     };
   }));
+  // Totales de la cartera por moneda (sin conversión).
+  const cartera = {};
+  for (const cl of clientes) {
+    for (const [moneda, t] of Object.entries(cl.cobros.totales)) {
+      const acc = (cartera[moneda] ||= { total: 0, cobrado: 0, porCobrar: 0, listo: 0, facturado: 0, vencido: 0 });
+      for (const k of Object.keys(acc)) acc[k] += t[k];
+    }
+  }
+  return { clientes, cartera };
 }

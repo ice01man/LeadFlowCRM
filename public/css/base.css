@@ -222,3 +222,8 @@ button.ganar { background: #1e7a46; color: #fff; }
 .comparacion td.num, .comparacion th.num { text-align: right; }
 .metas-tabla td:first-child input { max-width: none; min-width: 200px; }
 .metas-tabla td:nth-child(2) input { max-width: 120px; }
+.cobros-linea { border-top: 1px solid var(--borde); padding-top: 8px; }
+.ok-texto { color: #1e7a46; }
+@media (prefers-color-scheme: dark) { .ok-texto { color: #5cc98b; } }
+.acciones-celda { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.acciones-celda button { margin: 0; padding: 3px 8px; font-size: .8rem; width: auto; }

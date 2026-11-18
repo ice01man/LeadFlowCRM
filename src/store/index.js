@@ -28,6 +28,7 @@ export const db = {
       tareas: repoTenant(this._negocio.tareas, id),
       planes: repoTenant(this._negocio.planes, id),
       bitacora: repoTenant(this._negocio.bitacora, id),
+      cobros: repoTenant(this._negocio.cobros, id),
     };
   },
 };
@@ -61,6 +62,9 @@ export async function iniciarStore() {
     await Promise.all([Plan.init(), Bitacora.init()]);
     db._negocio.planes = repoMongo(Plan);
     db._negocio.bitacora = repoMongo(Bitacora);
+    const Cobro = (await import('../models/Cobro.js')).default;
+    await Cobro.init();
+    db._negocio.cobros = repoMongo(Cobro);
   } else {
     db.plataforma.organizaciones = repoMemoria({ unique: ['nombre'], defaults: { cuit: '', verticalCodigo: '', plan: 'prueba', llmActivo: true, activa: true } });
     db.plataforma.usuarios = repoMemoria({ unique: ['email'], defaults: { telefono: '', activo: true, organizacionId: null } });
@@ -72,6 +76,7 @@ export async function iniciarStore() {
     db._negocio.actividades = repoMemoria({ defaults: { oportunidadId: null, ownerNombre: '', descripcion: '', resultado: '', proximoPaso: '', fechaProximoPaso: null, tareaId: null } });
     db._negocio.planes = repoMemoria({ unique: ['organizacionId'], defaults: { titulo: '', objetivo: '', alcance: '', fechaInicio: null, fechaFin: null, estado: 'borrador', documentos: [], metas: [], fases: [], metricasInicio: null, metricasCierre: null, iniciadoEn: null, finalizadoEn: null, conclusiones: '' } });
     db._negocio.bitacora = repoMemoria({ defaults: { tipo: 'nota', autorNombre: '' } });
+    db._negocio.cobros = repoMemoria({ defaults: { moneda: 'ARS', disparador: 'manual', faseCodigo: '', fechaEstimada: null, estado: 'pendiente', listoManual: false, fechaFacturado: null, fechaCobro: null, comprobanteUrl: '', notas: '' } });
     db._negocio.tareas = repoMemoria({ defaults: { contactoId: null, contactoNombre: '', oportunidadId: null, descripcion: '', fechaVencimiento: null, prioridad: 'media', estado: 'pendiente', completadaEn: null, dependeDe: [] } });
   }
 }
