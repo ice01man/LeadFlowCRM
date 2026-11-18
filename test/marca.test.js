@@ -39,7 +39,7 @@ test('las páginas llevan el nombre, el logo y el favicon de la marca', async ()
 test('el token lo emite LeadFlow de Revoluxia: uno firmado sin ese emisor se rechaza', async () => {
   const jwt = (await import('jsonwebtoken')).default;
   const { JWT_SECRET } = await import('../src/config/env.js');
-  const me = (await s.api('POST', '/auth/login', { body: { email: 'admin@bodega.demo', password: 'demo12345' } })).data.usuario;
+  const me = (await s.api('POST', '/auth/login', { body: { email: 'admin@empresa-a.test', password: s.clave } })).data.usuario;
   const sinEmisor = jwt.sign({ id: me._id, rol: me.rol, org: me.organizacionId }, JWT_SECRET, { algorithm: 'HS256' });
   assert.equal((await s.api('GET', '/auth/me', { token: sinEmisor })).status, 401);
 });

@@ -8,8 +8,8 @@ import { repoTenant } from '../src/store/tenant.js';
 let s, adminBodega, adminGranja;
 before(async () => {
   s = await levantar();
-  adminBodega = await s.token('admin@bodega.demo');
-  adminGranja = await s.token('admin@granja.demo');
+  adminBodega = await s.token('admin@empresa-a.test');
+  adminGranja = await s.token('admin@empresa-b.test');
 });
 after(async () => s.cerrar());
 
@@ -17,8 +17,8 @@ test('cada admin lista solo los usuarios de su organización', async () => {
   const bodega = await s.api('GET', '/usuarios', { token: adminBodega });
   const granja = await s.api('GET', '/usuarios', { token: adminGranja });
   assert.equal(bodega.status, 200);
-  assert.ok(bodega.data.every((u) => u.email.endsWith('@bodega.demo')));
-  assert.ok(granja.data.every((u) => u.email.endsWith('@granja.demo')));
+  assert.ok(bodega.data.every((u) => u.email.endsWith('@empresa-a.test')));
+  assert.ok(granja.data.every((u) => u.email.endsWith('@empresa-b.test')));
   assert.ok(bodega.data.every((u) => u.passwordHash === undefined));
 });
 
@@ -35,7 +35,7 @@ test('no se puede crear un usuario en otra organización mandando organizacionId
   const granjaId = (await s.api('GET', '/auth/me', { token: adminGranja })).data.organizacion._id;
   const r = await s.api('POST', '/usuarios', {
     token: adminBodega,
-    body: { nombre: 'Infiltrado', email: 'infiltrado@x.com', password: 'clave12345', rol: 'vendedor', organizacionId: granjaId },
+    body: { nombre: 'Infiltrado', email: 'infiltrado@x.com', password: s.claveNueva, rol: 'vendedor', organizacionId: granjaId },
   });
   assert.equal(r.status, 201);
   const granja = await s.api('GET', '/usuarios', { token: adminGranja });
@@ -66,12 +66,12 @@ test('repoTenant: get, update y remove ignoran documentos de otra organización'
 });
 
 test('suspender una organización corta el acceso de sus usuarios al instante', async () => {
-  const sup = await s.token('super@leadflow.demo');
-  const vendedor = await s.token('vendedor@granja.demo');
+  const sup = await s.token('super@plataforma.test');
+  const vendedor = await s.token('vendedor@empresa-b.test');
   const granjaId = (await s.api('GET', '/auth/me', { token: adminGranja })).data.organizacion._id;
   assert.equal((await s.api('PATCH', `/organizaciones/${granjaId}`, { token: sup, body: { activa: false } })).status, 200);
   assert.equal((await s.api('GET', '/auth/me', { token: vendedor })).status, 401);
-  const login = await s.api('POST', '/auth/login', { body: { email: 'vendedor@granja.demo', password: 'demo12345' } });
+  const login = await s.api('POST', '/auth/login', { body: { email: 'vendedor@empresa-b.test', password: s.clave } });
   assert.equal(login.status, 401);
   await s.api('PATCH', `/organizaciones/${granjaId}`, { token: sup, body: { activa: true } });
   assert.equal((await s.api('GET', '/auth/me', { token: vendedor })).status, 200);

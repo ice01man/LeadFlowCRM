@@ -19,7 +19,7 @@
 Desde la Shell del servicio en Render (o local apuntando a Atlas):
 
 ```
-SUPERADMIN_PASSWORD='una-clave-larga' npm run superadmin -- tu-email@dominio.com "Paulo Reta"
+SUPERADMIN_PASSWORD='<tu contraseña, 12 caracteres o más>' npm run superadmin -- <tu email> "<tu nombre>"
 ```
 
 Después entrá con ese usuario y creá la primera organización con `POST /api/organizaciones` (la pantalla llega en la Fase 1).

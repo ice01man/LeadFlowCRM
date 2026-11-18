@@ -23,7 +23,8 @@ Qué quedó:
 - Variables `LLM_*` validadas en `env.js` (la capa LLM llega en la Fase 5).
 - CSP activa, limitador de login, manejador de errores sin filtrar detalles.
 - Frontend mínimo: login e inicio.
-- 30 tests en memoria (aislamiento, roles, auth, store, entorno).
+- Sin usuarios ni contraseñas fijas en el código. En desarrollo (memoria) se crea un superadmin local con contraseña aleatoria que se muestra en la consola; en producción el superadmin se crea con `npm run superadmin`.
+- 34 tests en memoria (aislamiento, roles, auth, store, entorno, marca). Arman sus datos por la API con contraseñas aleatorias en cada corrida.
 
 Diferencias con el prompt original y por qué:
 

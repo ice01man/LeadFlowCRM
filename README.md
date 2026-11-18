@@ -10,7 +10,7 @@ Estado: Fase 0 (base del proyecto). Ver `CAMBIOS-Y-GUIA.md` y `docs/arquitectura
 
 1. `npm install`
 2. `npm run dev`
-3. Abrí http://localhost:3000 y entrá con cualquiera de los usuarios demo que muestra la consola (contraseña `demo12345`).
+3. Abrí http://localhost:3000 y entrá con el superadmin local que muestra la consola. La contraseña es aleatoria y cambia cada vez que arrancás.
 
 ## Tests
 

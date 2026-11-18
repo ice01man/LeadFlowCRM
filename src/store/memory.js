@@ -1,4 +1,4 @@
-// Repositorio EN MEMORIA (modo demo y tests). Expone la misma API que store/mongo.js,
+// Repositorio EN MEMORIA (desarrollo local y tests). Expone la misma API que store/mongo.js,
 // así los servicios se escriben una sola vez para los dos modos.
 // Soporta: igualdad, $in, $nin, $ne, $gt, $gte, $lt, $lte, $regex (+ $options), $exists, $or
 // y campos anidados con punto ("direccion.municipio").

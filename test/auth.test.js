@@ -14,7 +14,7 @@ test('salud responde sin sesión y no expone datos', async () => {
 });
 
 test('login correcto devuelve token, usuario sin hash y cookie httpOnly', async () => {
-  const r = await s.api('POST', '/auth/login', { body: { email: 'admin@bodega.demo', password: 'demo12345' } });
+  const r = await s.api('POST', '/auth/login', { body: { email: 'admin@empresa-a.test', password: s.clave } });
   assert.equal(r.status, 200);
   assert.ok(r.data.token);
   assert.equal(r.data.usuario.passwordHash, undefined);
@@ -22,9 +22,9 @@ test('login correcto devuelve token, usuario sin hash y cookie httpOnly', async 
 });
 
 test('login: contraseña mala, email inexistente y datos inyectados dan el mismo 401', async () => {
-  const malo = await s.api('POST', '/auth/login', { body: { email: 'admin@bodega.demo', password: 'otra-clave' } });
-  const inexistente = await s.api('POST', '/auth/login', { body: { email: 'nadie@x.com', password: 'demo12345' } });
-  const inyeccion = await s.api('POST', '/auth/login', { body: { email: { $ne: null }, password: 'demo12345' } });
+  const malo = await s.api('POST', '/auth/login', { body: { email: 'admin@empresa-a.test', password: s.claveNueva + '-mala' } });
+  const inexistente = await s.api('POST', '/auth/login', { body: { email: 'nadie@x.com', password: s.clave } });
+  const inyeccion = await s.api('POST', '/auth/login', { body: { email: { $ne: null }, password: s.clave } });
   for (const r of [malo, inexistente, inyeccion]) {
     assert.equal(r.status, 401);
     assert.equal(r.data.error, 'Email o contraseña incorrectos.');
@@ -33,22 +33,22 @@ test('login: contraseña mala, email inexistente y datos inyectados dan el mismo
 
 test('/auth/me sin token o con token adulterado da 401', async () => {
   assert.equal((await s.api('GET', '/auth/me')).status, 401);
-  const t = await s.token('vendedor@bodega.demo');
+  const t = await s.token('vendedor@empresa-a.test');
   const adulterado = t.slice(0, -3) + (t.endsWith('aaa') ? 'bbb' : 'aaa');
   assert.equal((await s.api('GET', '/auth/me', { token: adulterado })).status, 401);
 });
 
 test('/auth/me devuelve usuario y organización; el superadmin no tiene organización', async () => {
-  const r = await s.api('GET', '/auth/me', { token: await s.token('consultor@bodega.demo') });
+  const r = await s.api('GET', '/auth/me', { token: await s.token('consultor@empresa-a.test') });
   assert.equal(r.status, 200);
   assert.equal(r.data.usuario.rol, 'consultor');
-  assert.equal(r.data.organizacion.nombre, 'Bodega Demo');
-  const sup = await s.api('GET', '/auth/me', { token: await s.token('super@leadflow.demo') });
+  assert.equal(r.data.organizacion.nombre, 'Empresa A');
+  const sup = await s.api('GET', '/auth/me', { token: await s.token('super@plataforma.test') });
   assert.equal(sup.data.organizacion, null);
 });
 
 test('la cookie de sesión también autentica (para las páginas del frontend)', async () => {
-  const t = await s.token('lectura@bodega.demo');
+  const t = await s.token('lectura@empresa-a.test');
   const r = await s.api('GET', '/auth/me', { headers: { Cookie: `lf_sesion=${t}` } });
   assert.equal(r.status, 200);
 });
