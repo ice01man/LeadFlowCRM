@@ -1,0 +1,14 @@
+{
+  "name": "LeadFlow CRM · Revoluxia",
+  "short_name": "LeadFlow",
+  "description": "Gestión comercial con inteligencia de tendencias. Un producto de Revoluxia.",
+  "start_url": "/inicio",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f4e6e",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "/img/icono-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/img/icono-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

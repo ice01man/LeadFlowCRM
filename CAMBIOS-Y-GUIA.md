@@ -1,5 +1,16 @@
 # LeadFlow CRM · Cambios y guía
 
+LeadFlow CRM es un producto de Revoluxia · soluciones tecnológicas.
+
+## Marca Revoluxia
+
+- Toda la identidad está en dos archivos: `src/config/marca.js` (servidor y API) y `public/css/marca.css` (colores del frontend). Cambiando esos dos, cambia todo el sistema.
+- Colores tomados del logo: azul petróleo `#1f4e6e` (primario), `#163a53` (hover), `#6fa3c7` (acento en modo oscuro), negro `#0b0f14` (texto).
+- Logos en `public/img/`: completo e isotipo, cada uno en versión azul (modo claro) y clara (modo oscuro), con fondo transparente. Favicon de 32 px, íconos de app de 180 y 512 px y `manifest.webmanifest` (instalable en el celular).
+- `GET /api/marca` devuelve nombre, eslogan, colores y logos; `GET /api/salud` informa "LeadFlow CRM · Revoluxia".
+- Los tokens de sesión salen firmados con el emisor `revoluxia-leadflow`.
+- El logo original quedó en `docs/marca/revoluxia-original.png`. Es de 196 px: para pantallas grandes e impresos conviene reemplazar los PNG por una versión en alta resolución o SVG.
+
 ## Fase 0 — Base del proyecto
 
 Qué quedó:
@@ -32,6 +43,7 @@ Pendiente de esta fase:
 | Método | Ruta | Quién |
 | --- | --- | --- |
 | GET | /api/salud | Público |
+| GET | /api/marca | Público |
 | POST | /api/auth/login | Público (con limitador) |
 | POST | /api/auth/logout | Público |
 | GET | /api/auth/me | Cualquier usuario logueado |

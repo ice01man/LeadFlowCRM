@@ -4,6 +4,7 @@ import { authRequired, requireRol, requireOrganizacion } from '../middleware/aut
 import { limitador } from '../middleware/limitador.js';
 import { ROL } from '../config/roles.js';
 import { MODO, LLM } from '../config/env.js';
+import { MARCA } from '../config/marca.js';
 import * as authC from '../controllers/authController.js';
 import * as usuarioC from '../controllers/usuarioController.js';
 import * as orgC from '../controllers/organizacionController.js';
@@ -11,7 +12,7 @@ import * as orgC from '../controllers/organizacionController.js';
 export const api = Router();
 
 // Salud: la usa Render como health check. No expone nada sensible.
-api.get('/salud', (_req, res) => res.json({ ok: true, persistencia: MODO, llm: LLM.activo ? 'activo' : 'apagado' }));
+api.get('/salud', (_req, res) => res.json({ ok: true, producto: MARCA.firma, persistencia: MODO, llm: LLM.activo ? 'activo' : 'apagado' }));
 
 // Auth
 const auth = Router();
@@ -19,6 +20,9 @@ auth.post('/login', limitador({ max: 10 }), authC.login);
 auth.post('/logout', authC.logout);
 auth.get('/me', authRequired, authC.me);
 api.use('/auth', auth);
+
+// Marca: nombre, eslogan, colores y logos (público, para que el frontend y futuras integraciones usen lo mismo).
+api.get('/marca', (_req, res) => res.json(MARCA));
 
 // Usuarios de la propia organización (solo admin)
 const usuarios = Router();

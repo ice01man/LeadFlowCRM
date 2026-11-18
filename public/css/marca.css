@@ -1,0 +1,8 @@
+/* Marca Revoluxia. Mismos valores que src/config/marca.js. Cambiar acá para cambiar todo el sistema. */
+:root {
+  --marca-primario: #1f4e6e;
+  --marca-primario-oscuro: #163a53;
+  --marca-primario-claro: #6fa3c7;
+  --marca-texto: #0b0f14;
+  --marca-fuente: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

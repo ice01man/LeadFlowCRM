@@ -12,10 +12,10 @@ const HASH_FALSO = bcrypt.hashSync('leadflow-hash-falso', 10);
 
 export const firmarToken = (u) => jwt.sign(
   { id: String(u._id), rol: u.rol, org: u.organizacionId ? String(u.organizacionId) : null },
-  JWT_SECRET, { expiresIn: JWT_EXPIRA, algorithm: 'HS256' },
+  JWT_SECRET, { expiresIn: JWT_EXPIRA, algorithm: 'HS256', issuer: 'revoluxia-leadflow' },
 );
 
-export const verificarToken = (token) => jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+export const verificarToken = (token) => jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'], issuer: 'revoluxia-leadflow' });
 
 export async function login(email, password) {
   const error = noAutorizado('Email o contraseña incorrectos.');

@@ -1,23 +1,49 @@
-/* LeadFlow CRM — estilos base. Tema claro/oscuro según el sistema operativo. */
+/* LeadFlow CRM · Revoluxia — estilos base. Los colores de marca vienen de marca.css.
+   Tema claro/oscuro según el sistema operativo. */
+@import url("./marca.css");
+
 :root {
-  --fondo: #f6f7f9; --panel: #ffffff; --texto: #1d2330; --suave: #5b6475;
-  --borde: #dde1e8; --acento: #2f6fde; --acento-texto: #ffffff; --error: #c0392b;
-  --radio: 10px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fondo: #f5f7f9; --panel: #ffffff; --texto: var(--marca-texto); --suave: #546270;
+  --borde: #d9e1e7; --acento: var(--marca-primario); --acento-hover: var(--marca-primario-oscuro);
+  --acento-texto: #ffffff; --error: #b3261e;
+  --radio: 10px; font-family: var(--marca-fuente);
 }
 @media (prefers-color-scheme: dark) {
-  :root { --fondo: #12151b; --panel: #1b2029; --texto: #e7eaf0; --suave: #9aa3b2; --borde: #2c3340; --acento: #5b8ff0; }
+  :root {
+    --fondo: #10161c; --panel: #18212a; --texto: #e7eef3; --suave: #9aabb8; --borde: #2a3743;
+    --acento: var(--marca-primario-claro); --acento-hover: #8bb8d6; --acento-texto: #0b1620;
+  }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--fondo); color: var(--texto); line-height: 1.5; }
-.centrado { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
-.tarjeta { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 24px; width: 100%; max-width: 380px; }
-h1 { font-size: 1.4rem; margin: 0 0 4px; }
+.centrado { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: 16px; padding: 16px; }
+.tarjeta { background: var(--panel); border: 1px solid var(--borde); border-top: 4px solid var(--acento); border-radius: var(--radio); padding: 24px; width: 100%; max-width: 380px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; color: var(--acento); }
 .sub { color: var(--suave); margin: 0 0 20px; font-size: .95rem; }
 label { display: block; font-size: .9rem; margin: 12px 0 4px; }
 input { width: 100%; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); color: var(--texto); font-size: 1rem; }
-button { margin-top: 18px; width: 100%; padding: 11px; border: 0; border-radius: 8px; background: var(--acento); color: var(--acento-texto); font-size: 1rem; cursor: pointer; }
+input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+button { margin-top: 18px; width: 100%; padding: 11px; border: 0; border-radius: 8px; background: var(--acento); color: var(--acento-texto); font-size: 1rem; font-weight: 600; cursor: pointer; }
+button:hover { background: var(--acento-hover); }
 button.secundario { background: transparent; color: var(--acento); border: 1px solid var(--borde); }
 .error { color: var(--error); font-size: .9rem; min-height: 1.2em; margin: 10px 0 0; }
 dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; }
 dt { color: var(--suave); }
 dd { margin: 0; }
+
+/* ---- Marca ---- */
+.logo { display: block; margin: 0 auto; height: auto; }
+.logo-completo { width: 180px; }
+.logo-isotipo { width: 44px; }
+/* En modo oscuro se muestra la variante clara del logo (la azul no se ve sobre fondo oscuro). */
+.solo-oscuro { display: none; }
+@media (prefers-color-scheme: dark) {
+  .solo-claro { display: none; }
+  .solo-oscuro { display: block; }
+}
+.barra { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--borde); }
+.barra .producto { font-weight: 700; color: var(--acento); }
+.barra .empresa { color: var(--suave); font-size: .85rem; }
+.pie { color: var(--suave); font-size: .8rem; text-align: center; }
+.pie a { color: var(--acento); }
+.barra + .centrado { min-height: calc(100vh - 66px); }

@@ -3,6 +3,7 @@ import { PORT, MODO } from './src/config/env.js';
 import { iniciarStore } from './src/store/index.js';
 import { cargarDemo } from './src/store/demo.js';
 import { crearApp } from './app.js';
+import { MARCA } from './src/config/marca.js';
 
 await iniciarStore(); // si Mongo no conecta, el proceso termina: nunca se sirve tráfico sin base
 
@@ -12,4 +13,4 @@ if (MODO === 'memoria') {
   console.log('Usuarios demo: ' + usuarios.map((u) => `${u.email} / ${u.password}`).join('  |  '));
 }
 
-crearApp().listen(PORT, () => console.log(`LeadFlow CRM escuchando en http://localhost:${PORT} (persistencia: ${MODO})`));
+crearApp().listen(PORT, () => console.log(`${MARCA.firma} escuchando en http://localhost:${PORT} (persistencia: ${MODO})`));

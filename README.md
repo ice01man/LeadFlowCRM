@@ -1,4 +1,6 @@
-# LeadFlow CRM
+# LeadFlow CRM · Revoluxia
+
+Un producto de Revoluxia · soluciones tecnológicas.
 
 SaaS multi-vertical de gestión comercial (contactos, pipeline, visitas, ventas) que aprende tendencias de los datos que genera cada organización.
 
@@ -22,4 +24,4 @@ Node.js 22 + Express 5 (ESM) + Mongoose 9. Frontend HTML/CSS/JS vanilla, sin bui
 
 - `docs/arquitectura.md`: decisiones, multi-tenant, roles, capas.
 - `docs/deploy.md`: cómo publicarlo en Render con MongoDB Atlas.
-- `CAMBIOS-Y-GUIA.md`: qué se hizo en cada fase.
+- `CAMBIOS-Y-GUIA.md`: qué se hizo en cada fase y cómo está aplicada la marca.
