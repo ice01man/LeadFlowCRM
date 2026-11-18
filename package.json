@@ -1,0 +1,25 @@
+{
+  "name": "leadflow-crm",
+  "version": "0.1.0",
+  "description": "LeadFlow CRM: SaaS multi-vertical de gestión comercial con aprendizaje de tendencias",
+  "type": "module",
+  "main": "server.js",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "PERSISTENCIA=memoria node --watch server.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
+    "superadmin": "node scripts/crear-superadmin.js"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.5"
+  }
+}
