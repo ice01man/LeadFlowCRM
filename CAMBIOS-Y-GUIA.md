@@ -11,28 +11,6 @@ LeadFlow CRM es un producto de Revoluxia · soluciones tecnológicas.
 - Los tokens de sesión salen firmados con el emisor `revoluxia-leadflow`.
 - El logo original quedó en `docs/marca/revoluxia-original.png`. Es de 196 px: para pantallas grandes e impresos conviene reemplazar los PNG por una versión en alta resolución o SVG.
 
-## Fase 1 — Verticales (rubros)
-
-Qué quedó:
-
-- Tres plantillas de rubro: vinos, granja y seguros (`src/verticales/plantillas.js`). Cada una trae etapas del pipeline con probabilidad, criterios BANT con pesos, KPIs, tipos de cliente, categorías de producto, guiones de visita y plantillas de email.
-- Las plantillas se cargan solas al arrancar si no existen. Si después se modifican, el arranque no las pisa.
-- Cada organización se da de alta con un rubro obligatorio y recibe una COPIA de su configuración. Cambiar la plantilla no afecta a las organizaciones existentes.
-- Admin y consultor ajustan la configuración de su organización. Vendedor y lectura la consultan. El admin puede restaurarla desde la plantilla.
-- Toda la configuración se valida en el servidor (`src/verticales/validacion.js`): probabilidades que no bajan entre etapas, los cuatro criterios BANT con al menos un peso mayor que cero, variables de email permitidas, códigos sin repetir, campos desconocidos rechazados.
-- Función de score BANT ponderado lista para la Fase 3.
-- Pantallas nuevas: `/plataforma` (superadmin: alta y suspensión de organizaciones, plantillas) y `/configuracion` (configuración comercial de la organización). El inicio muestra accesos según el rol.
-- Node fijado en 22.x en `package.json` (Render había tomado Node 26).
-- 47 tests.
-
-Cómo probarlo en Render después del deploy:
-
-1. Entrá como superadmin y andá a Plataforma.
-2. Creá una organización eligiendo el rubro, con su administrador.
-3. Salí y entrá con ese administrador: en Configuración comercial vas a ver la copia del rubro y la podés ajustar.
-
-Pendiente: la edición de guiones de visita y plantillas de email desde la pantalla llega con el módulo de actividades (Fase 2). Por API ya se pueden cambiar.
-
 ## Fase 0 — Base del proyecto
 
 Qué quedó:
@@ -61,7 +39,7 @@ Pendiente de esta fase:
 
 - Probar contra un MongoDB real (Atlas) antes de pasar a la Fase 1. Los modelos validan bien, pero la corrida completa todavía no se hizo.
 
-## API
+## API (Fase 0)
 
 | Método | Ruta | Quién |
 | --- | --- | --- |
@@ -74,10 +52,3 @@ Pendiente de esta fase:
 | GET, PATCH | /api/usuarios/:id | admin |
 | GET, POST | /api/organizaciones | superadmin |
 | GET, PATCH | /api/organizaciones/:id | superadmin |
-| GET | /api/verticales | Cualquier usuario (superadmin ve también los inactivos) |
-| GET | /api/verticales/:codigo | Cualquier usuario |
-| POST | /api/verticales | superadmin (se puede basar en otro con `basadoEn`) |
-| PATCH | /api/verticales/:codigo | superadmin |
-| GET | /api/organizacion/config | Usuarios de una organización |
-| PATCH | /api/organizacion/config | admin, consultor |
-| POST | /api/organizacion/config/restaurar | admin |
