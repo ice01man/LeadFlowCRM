@@ -18,6 +18,12 @@ export function el(tag, attrs = {}, ...hijos) {
 
 export const vaciar = (n) => { while (n.firstChild) n.firstChild.remove(); return n; };
 
+/** Agrega hijos a un nodo ignorando null, undefined y false (para secciones que se muestran según el rol). */
+export function poner(nodo, ...hijos) {
+  for (const h of hijos.flat()) if (h !== null && h !== undefined && h !== false) nodo.append(h);
+  return nodo;
+}
+
 export const ETAPA = { lead: 'Lead', calificado: 'Calificado', oportunidad: 'Oportunidad', cliente: 'Cliente', fidelizado: 'Fidelizado' };
 
 /** Lee parámetros de la URL actual. */
@@ -33,7 +39,16 @@ export const selector = (attrs, opciones, valor = '') => {
   return s;
 };
 
-export const fecha = (d) => (d ? new Date(d).toLocaleDateString('es-AR') : '—');
+const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+export const moneda = (n) => formatoMoneda.format(n || 0);
+export const fechaHora = (d) => (d ? new Date(d).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
+/** Fecha para un <input type="date"> (AAAA-MM-DD en hora argentina). */
+export const fechaInput = (d) => (d ? new Date(new Date(d).getTime() - 3 * 3600e3).toISOString().slice(0, 10) : '');
+export const TIPO_ACTIVIDAD = { llamada: 'Llamada', email: 'Email', reunion: 'Reunión', visita: 'Visita', whatsapp: 'WhatsApp', nota: 'Nota' };
+export const RESULTADO = { positivo: 'Positivo', neutro: 'Neutro', negativo: 'Negativo', sin_respuesta: 'Sin respuesta' };
+export const PRIORIDAD = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Crítica' };
+
+export const fecha = (d) => (d ? new Date(d).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : '—');
 
 export const NOMBRE_ROL = { superadmin: 'Superadmin', admin: 'Administrador', consultor: 'Consultor', vendedor: 'Vendedor', lectura: 'Solo lectura' };
 
@@ -51,7 +66,7 @@ export async function sesion() {
 export function barra({ usuario, organizacion }, activa = '') {
   const links = [['/inicio', 'Inicio']];
   if (usuario.rol === 'superadmin') links.push(['/plataforma', 'Plataforma']);
-  else links.push(['/contactos', 'Contactos'], ['/empresas', 'Empresas'], ['/configuracion', 'Configuración']);
+  else links.push(['/contactos', 'Contactos'], ['/pipeline', 'Pipeline'], ['/tareas', 'Tareas'], ['/empresas', 'Empresas'], ['/configuracion', 'Configuración']);
   const nav = el('nav', { class: 'nav', 'aria-label': 'Secciones' },
     links.map(([href, texto]) => el('a', { href, class: href === activa ? 'activo' : '', 'aria-current': href === activa ? 'page' : false }, texto)));
   const salir = el('button', { type: 'button', class: 'secundario chico', onclick: async () => { await api('POST', '/auth/logout').catch(() => {}); location.replace('/'); } }, 'Salir');
@@ -79,4 +94,31 @@ export function aviso(texto, tipo = 'ok') {
 export async function conBoton(boton, accion) {
   boton.disabled = true;
   try { return await accion(); } catch (e) { aviso(e.message, 'error'); return undefined; } finally { boton.disabled = false; }
+}
+
+/** Buscador de contactos: escribís y elegís de la lista. Devuelve { nodo, valor() , limpiar() }. */
+export function buscadorContacto({ id = 'buscar-contacto', etiqueta = 'Contacto' } = {}) {
+  let elegido = null;
+  const input = el('input', { id, type: 'search', placeholder: 'Escribí nombre, empresa o teléfono…', autocomplete: 'off' });
+  const lista = el('div', { class: 'resultados oculto', role: 'listbox' });
+  let espera;
+  input.addEventListener('input', () => {
+    elegido = null;
+    clearTimeout(espera);
+    const q = input.value.trim();
+    if (q.length < 2) { lista.classList.add('oculto'); return; }
+    espera = setTimeout(async () => {
+      const r = await api('GET', `/crm/contactos?porPagina=8&q=${encodeURIComponent(q)}`).catch(() => ({ items: [] }));
+      vaciar(lista).append(...(r.items.length ? r.items.map((c) => {
+        const texto = [c.nombre, c.apellido].filter(Boolean).join(' ') + (c.empresaNombre ? ` · ${c.empresaNombre}` : '');
+        return el('button', { type: 'button', role: 'option', onclick: () => { elegido = c; input.value = texto; lista.classList.add('oculto'); } }, texto);
+      }) : [el('div', { class: 'vacio' }, 'Sin resultados.')]));
+      lista.classList.remove('oculto');
+    }, 250);
+  });
+  return {
+    nodo: el('div', { class: 'campo buscador-contacto' }, el('label', { for: id }, etiqueta), input, lista),
+    valor: () => elegido,
+    limpiar: () => { elegido = null; input.value = ''; lista.classList.add('oculto'); },
+  };
 }

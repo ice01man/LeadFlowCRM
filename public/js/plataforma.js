@@ -1,5 +1,5 @@
 // Pantalla del superadmin: organizaciones (clientes del SaaS) y plantillas de vertical.
-import { el, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
+import { el, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
@@ -14,7 +14,7 @@ const listaOrgs = el('div', { class: 'tabla-scroll' });
 const listaVerticales = el('div');
 const selectVertical = el('select', { id: 'org-vertical', name: 'verticalCodigo', required: true });
 
-app.append(
+poner(app, 
   el('h1', {}, 'Plataforma'),
   el('p', { class: 'sub' }, 'Clientes del SaaS y plantillas de rubro.'),
   seccionAlta(),
@@ -94,10 +94,10 @@ async function cargarOrgs() {
 // ---------- Verticales ----------
 async function cargarVerticales() {
   verticales = await api('GET', '/verticales');
-  vaciar(selectVertical).append(el('option', { value: '' }, 'Elegí un rubro…'),
+  poner(vaciar(selectVertical), el('option', { value: '' }, 'Elegí un rubro…'),
     ...verticales.filter((v) => v.activo).map((v) => el('option', { value: v.codigo }, v.nombre)));
   const detalles = await Promise.all(verticales.map((v) => api('GET', `/verticales/${v.codigo}`)));
-  vaciar(listaVerticales).append(...detalles.map(tarjetaVertical));
+  poner(vaciar(listaVerticales), ...detalles.map(tarjetaVertical));
 }
 
 function tarjetaVertical(v) {

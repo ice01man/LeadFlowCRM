@@ -1,5 +1,5 @@
 // Configuración comercial de la organización. Admin y consultor la editan; vendedor y lectura la consultan.
-import { el, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
+import { el, poner, vaciar, sesion, barra, aviso, conBoton } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
@@ -15,7 +15,7 @@ let datos;
 async function dibujar() {
   datos = await api('GET', '/organizacion/config');
   const vertical = await api('GET', `/verticales/${datos.verticalCodigo}`).catch(() => null);
-  vaciar(app).append(
+  poner(vaciar(app), 
     el('h1', {}, 'Configuración comercial'),
     el('p', { class: 'sub' }, `${s.organizacion.nombre} · rubro ${vertical?.nombre || datos.verticalCodigo}. `,
       puedeEditar ? 'Los cambios valen solo para tu organización.' : 'Solo lectura: los cambios los hace el administrador o el consultor.'),

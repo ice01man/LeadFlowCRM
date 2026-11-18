@@ -1,5 +1,5 @@
 // Empresas: listado con búsqueda, alta y edición en la misma pantalla.
-import { el, vaciar, sesion, barra, aviso, conBoton, campo, selector } from './ui.js';
+import { el, poner, vaciar, sesion, barra, aviso, conBoton, campo, selector } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
@@ -37,7 +37,7 @@ const form = el('form', { novalidate: true },
   el('datalist', { id: 'municipios' }, opciones.municipios.map((m) => el('option', { value: m }))),
   el('div', { class: 'acciones' }, guardar, cancelar, gestiona ? archivar : null));
 
-app.append(
+poner(app, 
   el('div', { class: 'encabezado' }, el('div', {}, el('h1', {}, 'Empresas'), resumen)),
   escribe ? el('section', { class: 'seccion', id: 'form-empresa' }, titulo, form) : null,
   el('section', { class: 'seccion' }, buscador, tabla),

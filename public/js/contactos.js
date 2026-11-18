@@ -1,5 +1,5 @@
 // Listado de contactos: búsqueda, filtros, vistas guardadas, asignación masiva y exportación.
-import { el, vaciar, sesion, barra, aviso, conBoton, selector, parametro, ETAPA } from './ui.js';
+import { el, poner, vaciar, sesion, barra, aviso, conBoton, selector, parametro, ETAPA } from './ui.js';
 import { api } from './api.js';
 
 const s = await sesion();
@@ -27,7 +27,7 @@ if (!gestiona) fOwner.classList.add('oculto');
 
 const selVista = el('select', { 'aria-label': 'Vista' });
 function cargarVistas(lista) {
-  vaciar(selVista).append(
+  poner(vaciar(selVista), 
     el('optgroup', { label: 'Vistas del sistema' }, lista.predefinidas.map((v) => el('option', { value: v.codigo }, v.nombre))),
     lista.guardadas.length ? el('optgroup', { label: 'Vistas guardadas' }, lista.guardadas.map((v) => el('option', { value: v._id }, `${v.nombre}${v.compartida ? ' (equipo)' : ''}`))) : null,
   );
@@ -44,7 +44,7 @@ const tabla = el('div', { class: 'tabla-scroll' });
 const paginado = el('div', { class: 'paginado' });
 const barraSel = el('div', { class: 'barra-seleccion oculto' });
 
-app.append(
+poner(app, 
   el('div', { class: 'encabezado' },
     el('div', {}, el('h1', {}, 'Contactos'), resumen),
     el('div', { class: 'acciones' },
@@ -145,7 +145,7 @@ async function cargar() {
   const sig = el('button', { type: 'button', class: 'secundario', disabled: r.pagina >= paginas }, 'Siguiente →');
   ant.addEventListener('click', () => { estado.pagina -= 1; cargar(); });
   sig.addEventListener('click', () => { estado.pagina += 1; cargar(); });
-  vaciar(paginado).append(ant, el('span', { class: 'suave' }, `Página ${r.pagina} de ${paginas}`), sig);
+  poner(vaciar(paginado), ant, el('span', { class: 'suave' }, `Página ${r.pagina} de ${paginas}`), sig);
 }
 
 function dibujarSeleccion() {
@@ -158,7 +158,7 @@ function dibujarSeleccion() {
     aviso(`${r.actualizados} contacto${r.actualizados === 1 ? '' : 's'} asignado${r.actualizados === 1 ? '' : 's'}.`);
     await cargar();
   }));
-  vaciar(barraSel).append(el('strong', {}, `${seleccion.size} seleccionado${seleccion.size === 1 ? '' : 's'}`), el('span', { class: 'suave' }, 'Asignar a'), destino, boton);
+  poner(vaciar(barraSel), el('strong', {}, `${seleccion.size} seleccionado${seleccion.size === 1 ? '' : 's'}`), el('span', { class: 'suave' }, 'Asignar a'), destino, boton);
 }
 
 await cargar();

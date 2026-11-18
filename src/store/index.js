@@ -23,6 +23,9 @@ export const db = {
       empresas: repoTenant(this._negocio.empresas, id),
       contactos: repoTenant(this._negocio.contactos, id),
       vistas: repoTenant(this._negocio.vistas, id),
+      oportunidades: repoTenant(this._negocio.oportunidades, id),
+      actividades: repoTenant(this._negocio.actividades, id),
+      tareas: repoTenant(this._negocio.tareas, id),
     };
   },
 };
@@ -45,6 +48,13 @@ export async function iniciarStore() {
     db._negocio.empresas = repoMongo(Empresa);
     db._negocio.contactos = repoMongo(Contacto);
     db._negocio.vistas = repoMongo(Vista);
+    const [Oportunidad, Actividad, Tarea] = (await Promise.all([
+      import('../models/Oportunidad.js'), import('../models/Actividad.js'), import('../models/Tarea.js'),
+    ])).map((m) => m.default);
+    await Promise.all([Oportunidad.init(), Actividad.init(), Tarea.init()]);
+    db._negocio.oportunidades = repoMongo(Oportunidad);
+    db._negocio.actividades = repoMongo(Actividad);
+    db._negocio.tareas = repoMongo(Tarea);
   } else {
     db.plataforma.organizaciones = repoMemoria({ unique: ['nombre'], defaults: { cuit: '', verticalCodigo: '', plan: 'prueba', llmActivo: true, activa: true } });
     db.plataforma.usuarios = repoMemoria({ unique: ['email'], defaults: { telefono: '', activo: true, organizacionId: null } });
@@ -52,6 +62,9 @@ export async function iniciarStore() {
     db._negocio.empresas = repoMemoria({ defaults: { cuit: '', segmento: '', direccion: '', municipio: '', localidad: '', telefono: '', sitioWeb: '', notas: '', busqueda: '', activa: true } });
     db._negocio.contactos = repoMemoria({ defaults: { empresaId: null, empresaNombre: '', owner: null, apellido: '', email: '', telefono: '', telefonoNormalizado: '', cargo: '', segmento: '', direccion: '', municipio: '', localidad: '', lifecycleStage: 'lead', etiquetas: [], notas: '', origen: 'manual', scoreBANT: 0, scoreIA: 0, scoreChurn: 0, fechaUltimaInteraccion: null, fechaUltimaCompra: null, busqueda: '', activo: true } });
     db._negocio.vistas = repoMemoria({ defaults: { filtros: {}, compartida: false } });
+    db._negocio.oportunidades = repoMemoria({ defaults: { contactoNombre: '', empresaId: null, empresaNombre: '', owner: null, valorEstimado: 0, probabilidad: 0, fechaCierreEsperada: null, estado: 'abierta', fechaCierre: null, motivoPerdida: '', notas: '', historialEtapas: [] } });
+    db._negocio.actividades = repoMemoria({ defaults: { oportunidadId: null, ownerNombre: '', descripcion: '', resultado: '', proximoPaso: '', fechaProximoPaso: null, tareaId: null } });
+    db._negocio.tareas = repoMemoria({ defaults: { contactoId: null, contactoNombre: '', oportunidadId: null, descripcion: '', fechaVencimiento: null, prioridad: 'media', estado: 'pendiente', completadaEn: null, dependeDe: [] } });
   }
 }
 

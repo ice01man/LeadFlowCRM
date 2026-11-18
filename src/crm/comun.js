@@ -40,3 +40,30 @@ export function paginacion(q = {}) {
   const porPagina = Math.min(100, Math.max(1, Math.floor(Number(q.porPagina) || 25)));
   return { pagina, porPagina, skip: (pagina - 1) * porPagina };
 }
+
+/** Fecha opcional: acepta 'AAAA-MM-DD' o ISO. '' o null → null. */
+export function fechaOpcional(v, campo) {
+  if (v === undefined) return undefined;
+  if (v === null || v === '') return null;
+  if (typeof v !== 'string') throw badRequest(`${campo}: formato inválido.`);
+  const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T12:00:00-03:00` : v); // fecha sola = mediodía en Argentina
+  if (Number.isNaN(d.getTime())) throw badRequest(`${campo}: fecha inválida.`);
+  return d;
+}
+
+/** Número opcional dentro de un rango. */
+export function numeroOpcional(v, campo, min, max) {
+  if (v === undefined) return undefined;
+  if (v === null || v === '') return 0;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < min || n > max) throw badRequest(`${campo}: tiene que ser un número entre ${min} y ${max}.`);
+  return n;
+}
+
+/** Id como string (rechaza objetos y valores raros). */
+export function idOpcional(v, campo) {
+  if (v === undefined) return undefined;
+  if (v === null || v === '') return null;
+  if (typeof v !== 'string' || v.length > 40) throw badRequest(`${campo} inválido.`);
+  return v;
+}

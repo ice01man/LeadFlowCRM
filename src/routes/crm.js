@@ -36,3 +36,25 @@ crm.get('/empresas/:id', c.obtenerEmpresa);
 crm.post('/empresas', escribe, c.crearEmpresa);
 crm.patch('/empresas/:id', escribe, c.actualizarEmpresa);
 crm.delete('/empresas/:id', gestiona, c.archivarEmpresa);
+
+// Oportunidades y pipeline
+crm.get('/oportunidades/pipeline', c.pipeline);
+crm.get('/oportunidades', c.listarOportunidades);
+crm.get('/oportunidades/:id', c.obtenerOportunidad);
+crm.post('/oportunidades', escribe, c.crearOportunidad);
+crm.patch('/oportunidades/:id', escribe, c.actualizarOportunidad);
+crm.patch('/oportunidades/:id/etapa', escribe, c.moverOportunidad);
+crm.post('/oportunidades/:id/cerrar', escribe, c.cerrarOportunidad);
+crm.post('/oportunidades/:id/reabrir', gestiona, c.reabrirOportunidad);
+
+// Actividades
+crm.get('/actividades', c.listarActividades);
+crm.post('/actividades', escribe, c.registrarActividad);
+crm.delete('/actividades/:id', escribe, c.borrarActividad);
+
+// Tareas
+crm.get('/tareas', c.listarTareas);
+crm.get('/tareas/:id', c.obtenerTarea);
+crm.post('/tareas', escribe, c.crearTarea);
+crm.patch('/tareas/:id', escribe, c.actualizarTarea);
+crm.patch('/tareas/:id/estado', escribe, c.estadoTarea);
