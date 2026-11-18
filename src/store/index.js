@@ -2,7 +2,7 @@
 // según PERSISTENCIA; el resto del código solo conoce `db`.
 //
 // Dos niveles de acceso:
-//   db.plataforma.*   → colecciones globales (organizaciones, usuarios para el login). Uso restringido.
+//   db.plataforma.*   → colecciones globales (organizaciones, verticales, usuarios para el login). Uso restringido.
 //   db.org(id).*      → colecciones de negocio atadas a UNA organización (ver store/tenant.js).
 import mongoose from 'mongoose';
 import { MODO, MONGODB_URI, MONGODB_DB } from '../config/env.js';
@@ -26,15 +26,17 @@ export async function iniciarStore() {
   if (MODO === 'mongo') {
     await mongoose.connect(MONGODB_URI, { dbName: MONGODB_DB, serverSelectionTimeoutMS: 8000 });
     console.log(`MongoDB conectado (base: ${MONGODB_DB})`);
-    const [Organizacion, Usuario] = (await Promise.all([
-      import('../models/Organizacion.js'), import('../models/Usuario.js'),
+    const [Organizacion, Usuario, Vertical] = (await Promise.all([
+      import('../models/Organizacion.js'), import('../models/Usuario.js'), import('../models/Vertical.js'),
     ])).map((m) => m.default);
-    await Promise.all([Organizacion.init(), Usuario.init()]); // índices únicos antes de recibir tráfico
+    await Promise.all([Organizacion.init(), Usuario.init(), Vertical.init()]); // índices únicos antes de recibir tráfico
     db.plataforma.organizaciones = repoMongo(Organizacion);
     db.plataforma.usuarios = repoMongo(Usuario);
+    db.plataforma.verticales = repoMongo(Vertical);
   } else {
     db.plataforma.organizaciones = repoMemoria({ unique: ['nombre'], defaults: { cuit: '', verticalCodigo: '', plan: 'prueba', llmActivo: true, activa: true } });
     db.plataforma.usuarios = repoMemoria({ unique: ['email'], defaults: { telefono: '', activo: true, organizacionId: null } });
+    db.plataforma.verticales = repoMemoria({ unique: ['codigo'], defaults: { descripcion: '', activo: true } });
   }
 }
 

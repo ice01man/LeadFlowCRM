@@ -2,10 +2,13 @@
 import { PORT, MODO } from './src/config/env.js';
 import { iniciarStore } from './src/store/index.js';
 import { crearSuperadminLocal } from './src/store/local.js';
+import { sembrarVerticales } from './src/services/verticales.js';
 import { crearApp } from './app.js';
 import { MARCA } from './src/config/marca.js';
 
 await iniciarStore(); // si Mongo no conecta, el proceso termina: nunca se sirve tráfico sin base
+const nuevas = await sembrarVerticales();
+if (nuevas) console.log(`Plantillas de vertical cargadas: ${nuevas}.`);
 
 if (MODO === 'memoria') {
   const local = await crearSuperadminLocal();

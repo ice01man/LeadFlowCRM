@@ -25,7 +25,7 @@ test('alta de organización crea su admin, que puede ingresar y solo ve su organ
   const sup = await s.token('super@plataforma.test');
   const r = await s.api('POST', '/organizaciones', {
     token: sup,
-    body: { nombre: 'Empresa C', cuit: '30-33333333-3', admin: { nombre: 'Ana Admin', email: 'ana@empresa-c.test', password: s.claveNueva } },
+    body: { nombre: 'Empresa C', cuit: '30-33333333-3', verticalCodigo: 'seguros', admin: { nombre: 'Ana Admin', email: 'ana@empresa-c.test', password: s.claveNueva } },
   });
   assert.equal(r.status, 201);
   assert.equal(r.data.admin.rol, 'admin');
@@ -37,11 +37,11 @@ test('alta de organización crea su admin, que puede ingresar y solo ve su organ
 test('alta de organización: nombre repetido, CUIT inválido o admin con email usado no dejan nada a medias', async () => {
   const sup = await s.token('super@plataforma.test');
   const antes = (await s.api('GET', '/organizaciones', { token: sup })).data.length;
-  const repetido = await s.api('POST', '/organizaciones', { token: sup, body: { nombre: 'empresa a', admin: { nombre: 'X', email: 'x1@x.com', password: s.claveNueva } } });
+  const repetido = await s.api('POST', '/organizaciones', { token: sup, body: { nombre: 'empresa a', verticalCodigo: 'vinos', admin: { nombre: 'X', email: 'x1@x.com', password: s.claveNueva } } });
   assert.equal(repetido.status, 409);
-  const cuit = await s.api('POST', '/organizaciones', { token: sup, body: { nombre: 'Otra', cuit: '123', admin: { nombre: 'X', email: 'x2@x.com', password: s.claveNueva } } });
+  const cuit = await s.api('POST', '/organizaciones', { token: sup, body: { nombre: 'Otra', cuit: '123', verticalCodigo: 'vinos', admin: { nombre: 'X', email: 'x2@x.com', password: s.claveNueva } } });
   assert.equal(cuit.status, 400);
-  const email = await s.api('POST', '/organizaciones', { token: sup, body: { nombre: 'Otra', admin: { nombre: 'X', email: 'admin@empresa-a.test', password: s.claveNueva } } });
+  const email = await s.api('POST', '/organizaciones', { token: sup, body: { nombre: 'Otra', verticalCodigo: 'vinos', admin: { nombre: 'X', email: 'admin@empresa-a.test', password: s.claveNueva } } });
   assert.equal(email.status, 409);
   assert.equal((await s.api('GET', '/organizaciones', { token: sup })).data.length, antes);
 });

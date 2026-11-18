@@ -1,11 +1,13 @@
 {
   "name": "leadflow-crm",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Revoluxia · soluciones tecnológicas",
   "description": "LeadFlow CRM de Revoluxia: SaaS multi-vertical de gestión comercial con aprendizaje de tendencias",
   "type": "module",
   "main": "server.js",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "PERSISTENCIA=memoria node --watch server.js",

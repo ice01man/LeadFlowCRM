@@ -26,14 +26,16 @@ test('todos los logos e íconos de la marca existen y son PNG', async () => {
   }
 });
 
-test('las páginas llevan el nombre, el logo y el favicon de la marca', async () => {
-  for (const pagina of ['/', '/inicio']) {
+test('las páginas llevan el nombre, el favicon y el logo de la marca', async () => {
+  for (const pagina of ['/', '/inicio', '/plataforma', '/configuracion']) {
     const html = await (await fetch(raiz + pagina)).text();
     assert.match(html, /<title>[^<]*LeadFlow CRM · Revoluxia<\/title>/, pagina);
-    assert.match(html, /revoluxia-(logo|isotipo)\.png/, pagina);
     assert.match(html, /favicon-32\.png/, pagina);
     assert.match(html, /manifest\.webmanifest/, pagina);
   }
+  assert.match(await (await fetch(raiz + '/')).text(), /revoluxia-logo\.png/);
+  // las pantallas internas dibujan la barra con el isotipo desde ui.js
+  assert.match(await (await fetch(raiz + '/js/ui.js')).text(), /revoluxia-isotipo\.png/);
 });
 
 test('el token lo emite LeadFlow de Revoluxia: uno firmado sin ese emisor se rechaza', async () => {

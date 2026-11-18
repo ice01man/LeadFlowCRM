@@ -33,6 +33,12 @@ public/              → frontend vanilla (sin scripts inline: la CSP lo prohíb
 
 Regla para las fases siguientes: toda colección de negocio nueva se registra en `db.org()` y lleva índice compuesto `{ organizacionId, ... }`.
 
+## Verticales y configuración comercial
+
+- `db.plataforma.verticales`: plantillas globales (vinos, granja, seguros). Las gestiona el superadmin.
+- `organizacion.config`: copia propia que recibe cada organización al darse de alta. Las fases siguientes leen SIEMPRE esta copia (etapas del pipeline, pesos BANT, categorías), nunca la plantilla.
+- Toda escritura de configuración pasa por `src/verticales/validacion.js`.
+
 ## Roles
 
 | Rol | Alcance | Puede |

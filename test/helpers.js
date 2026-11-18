@@ -8,18 +8,20 @@ import crypto from 'node:crypto';
 const { iniciarStore, db } = await import('../src/store/index.js');
 const { hashear } = await import('../src/services/usuarios.js');
 const { crearApp } = await import('../app.js');
+const { sembrarVerticales } = await import('../src/services/verticales.js');
 
 const azar = () => crypto.randomBytes(9).toString('base64url');
 
 // Organizaciones y usuarios de prueba (dominio .test, reservado para pruebas).
 const ESCENARIO = [
-  { nombre: 'Empresa A', cuit: '30-11111111-1', admin: 'admin@empresa-a.test', otros: [['consultor', 'consultor@empresa-a.test'], ['vendedor', 'vendedor@empresa-a.test'], ['lectura', 'lectura@empresa-a.test']] },
-  { nombre: 'Empresa B', cuit: '30-22222222-2', admin: 'admin@empresa-b.test', otros: [['vendedor', 'vendedor@empresa-b.test']] },
+  { nombre: 'Empresa A', cuit: '30-11111111-1', vertical: 'vinos', admin: 'admin@empresa-a.test', otros: [['consultor', 'consultor@empresa-a.test'], ['vendedor', 'vendedor@empresa-a.test'], ['lectura', 'lectura@empresa-a.test']] },
+  { nombre: 'Empresa B', cuit: '30-22222222-2', vertical: 'granja', admin: 'admin@empresa-b.test', otros: [['vendedor', 'vendedor@empresa-b.test']] },
 ];
 export const SUPER = 'super@plataforma.test';
 
 export async function levantar() {
   await iniciarStore();
+  await sembrarVerticales();
   const clave = azar();      // contraseña de todos los usuarios del escenario
   const claveNueva = azar(); // para usuarios que crean los propios tests
   await db.plataforma.usuarios.create({ nombre: 'Superadmin', email: SUPER, rol: 'superadmin', organizacionId: null, passwordHash: await hashear(clave), activo: true });
@@ -46,7 +48,7 @@ export async function levantar() {
   // El escenario se arma igual que en producción: superadmin crea organizaciones, cada admin crea su equipo.
   const tSuper = await token(SUPER);
   for (const o of ESCENARIO) {
-    const r = await api('POST', '/organizaciones', { token: tSuper, body: { nombre: o.nombre, cuit: o.cuit, admin: { nombre: `Admin ${o.nombre}`, email: o.admin, password: clave } } });
+    const r = await api('POST', '/organizaciones', { token: tSuper, body: { nombre: o.nombre, cuit: o.cuit, verticalCodigo: o.vertical, admin: { nombre: `Admin ${o.nombre}`, email: o.admin, password: clave } } });
     if (r.status !== 201) throw new Error(`No pude crear ${o.nombre}: ${JSON.stringify(r.data)}`);
     const tAdmin = await token(o.admin);
     for (const [rol, email] of o.otros) {

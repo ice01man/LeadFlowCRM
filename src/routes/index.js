@@ -2,12 +2,14 @@
 import { Router } from 'express';
 import { authRequired, requireRol, requireOrganizacion } from '../middleware/auth.js';
 import { limitador } from '../middleware/limitador.js';
-import { ROL } from '../config/roles.js';
+import { ROL, ROLES_IA } from '../config/roles.js';
 import { MODO, LLM } from '../config/env.js';
 import { MARCA } from '../config/marca.js';
 import * as authC from '../controllers/authController.js';
 import * as usuarioC from '../controllers/usuarioController.js';
 import * as orgC from '../controllers/organizacionController.js';
+import * as verticalC from '../controllers/verticalController.js';
+import * as configC from '../controllers/configController.js';
 
 export const api = Router();
 
@@ -41,5 +43,22 @@ orgs.get('/:id', orgC.obtener);
 orgs.post('/', orgC.crear);
 orgs.patch('/:id', orgC.actualizar);
 api.use('/organizaciones', orgs);
+
+// Verticales: cualquier usuario logueado los consulta; solo el superadmin los crea o modifica.
+const verts = Router();
+verts.use(authRequired);
+verts.get('/', verticalC.listar);
+verts.get('/:codigo', verticalC.obtener);
+verts.post('/', requireRol(ROL.SUPERADMIN), verticalC.crear);
+verts.patch('/:codigo', requireRol(ROL.SUPERADMIN), verticalC.actualizar);
+api.use('/verticales', verts);
+
+// Configuración comercial de la propia organización: todos la leen; admin y consultor la ajustan.
+const config = Router();
+config.use(authRequired, requireOrganizacion);
+config.get('/', configC.obtener);
+config.patch('/', requireRol(...ROLES_IA), configC.actualizar);
+config.post('/restaurar', requireRol(ROL.ADMIN), configC.restaurar);
+api.use('/organizacion/config', config);
 
 api.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
